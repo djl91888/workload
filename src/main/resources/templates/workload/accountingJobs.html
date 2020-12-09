@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--360浏览器优先以webkit内核解析-->
+    <title>核算工作量</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="../../static/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
+    <link href="../../static/css/font-awesome.min.css" th:href="@{/css/font-awesome.min.css}" rel="stylesheet" />
+    <link href="../../static/css/main/animate.min.css" th:href="@{/css/main/animate.min.css}" rel="stylesheet" />
+    <link href="../../static/css/main/style.min862f.css" th:href="@{/css/main/style.min862f.css}" rel="stylesheet" />
+    <link href="../../static/css/elementUI.css" th:href="@{/css/elementUI.css}" rel="stylesheet" />
+    <link href="../../static/css/newCss/main.css" th:href="@{/css/newCss/main.css}" rel="stylesheet" />
+
+</head>
+<style>
+    body {
+        padding: 30px;
+        box-sizing: border-box;
+        position: relative;
+        padding-top: 10px;
+        padding-left: 25px;
+        padding-right: 25px;
+    }
+
+    .white-bg {
+        padding-left: 30px;
+    }
+
+    #div1 {
+        z-index: 1;
+        position: relative;
+    }
+
+    .blue-span {
+        width: 3px;
+        height: 20px;
+        background: rgb(3, 169, 244);
+        display: inline-block;
+        margin-right: 5px;
+        position: relative;
+        top: 5px;
+    }
+
+    .ul-wrap {
+        /*margin-left: 20px;*/
+    }
+
+    .ul-wrap div {
+        font-size: 14px;
+    }
+
+    .ul-wrap div {
+        margin-bottom: 10px;
+    }
+
+    .el-form-item {
+        margin-bottom: 16px !important;
+    }
+
+    .el-upload__input {
+        display: none !important;
+        opacity: 0;
+    }
+
+    .set-value {
+        border: 0;
+        width: 300px;
+    }
+
+    .el-table .cell {
+        white-space: nowrap;
+        color: #515a6e;
+    }
+
+    .table-container .el-table th.is-leaf,
+    .table-container .el-table td {
+        border-width: 0.5px;
+    }
+
+    body .el-table th.gutter {
+        display: table-cell !important;
+    }
+
+    .el-input,
+    .el-input__inner {
+        width: 238px;
+        height: 48px;
+    }
+
+    .upload-button {
+        background: #409EFF;
+        color: #fff;
+        font-size: 12px;
+        width: 80px;
+        height: 35px;
+        border: 1px solid;
+        line-height: 35px;
+        border-radius: 4px;
+    }
+
+    .quxiao2 {
+        border: 1px solid #409EFF;
+        color: #409EFF;
+    }
+
+    .el-form-item__content .el-input {
+        width: 238px;
+        height: 40px;
+    }
+
+    .el-tabs__item {
+        font-size: 16px;
+    }
+
+    .el-form-item__label {
+        color: #515a6e;
+    }
+
+    .el-tabs__item {
+        font-size: 16px;
+        color: #515a6e;
+    }
+
+    .module-label {
+        font-size: 14px;
+        color: #515a6e;
+        font-weight: bold;
+        padding-right: 10px;
+        width: 100px;
+        display: inline-block;
+        text-align: right;
+    }
+
+    .dashboard-header {
+        padding-top: 10px;
+    }
+
+    .sm-title {
+        font-size: 14px;
+        font-weight: bold;
+        line-height: 40px;
+        color: #515a6e;
+        margin-bottom: 10px;
+    }
+
+    .flex {
+        display: flex;
+    }
+
+    .el-input--small .el-input__inner {
+        height: 40px;
+        line-height: 40px;
+    }
+
+    .el-form-item--small .el-form-item__content,
+    .el-form-item--small .el-form-item__label {
+        line-height: 40px;
+    }
+
+    .el-upload__tip {
+        line-height: 22px;
+    }
+
+    .el-tabs__content {
+        padding-top: 4px;
+    }
+
+    .dashboard-header {
+        padding-left: 30px;
+    }
+
+    /*.put-in:empty::before {
+        color: lightgrey;
+        content: attr(placeholder);
+    }*/
+    .put-in:empty:before{
+        content: attr(placeholder);
+        color:#bbb;
+    }
+    .put-in:focus:before{
+        content:none;
+    }
+    .float>div{
+        float: left;
+    }
+    .clear:after{
+        display: block;
+        content: '';
+        clear: both;
+    }
+    .fixed-width{
+        width: 400px;
+    }
+    .el-form--inline .el-form-item{
+        margin-right: -4px;
+    }
+</style>
+
+<body class="gray-bg">
+    <div id="app-jobs" class="row  border-bottom white-bg dashboard-header">
+        <el-tabs v-model="activeName">
+            <el-tab-pane :label="content" name="first">
+                <!--返回 + 标题-->
+                <!--<el-page-header @back="goBack" content="核算工作量"></el-page-header>-->
+                <!--返回 + 标题 end-->
+                <!--基本信息-->
+                <div>
+                    <div class="sm-title">
+                        <span class="blue-span"></span><span>基本信息</span>
+                    </div>
+                    <div class="ul-wrap">
+                        <div class="float clear">
+                            <div class="fixed-width"><span class="module-label">需求名称</span>{{informations.demandContent}}</div>
+                            <div class="fixed-width"><span class="module-label">需求来源</span>{{informations.demandSource}}
+                                {{informations.sourceBy}}</div>
+                            <div class="fixed-width"><span class="module-label">当前状态</span><span
+                                    v-if="informations.demandStatus==='0'">新建</span><span
+                                    v-if="informations.demandStatus==='1'">进行中</span>
+                                <span v-if="informations.demandStatus==='2'">已上线</span><span
+                                        v-if="informations.demandStatus==='3'">关闭</span></div>
+                        </div>
+                        <div class="float clear">
+                            <div class="fixed-width"><span class="module-label">CQ单号</span>{{informations.cqCode}}</div>
+
+                            <div class="fixed-width"><span class="module-label">需求类型</span>{{informations.demandName}}</div>
+                            <div class="fixed-width"><span class="module-label">功能点数量</span>{{informations.expectWorkload}}</div>
+                        </div>
+                    </div>
+                </div>
+                <!--工作笔记-->
+                <div>
+                    <div class="sm-title">
+                        <span class="blue-span"></span><span>工作笔记</span>
+                    </div>
+                    <el-form ref="form" :model="worknoteform" size="small" :inline="true">
+                        <el-form-item label="所属工作大类"  class="fixed-width" label-width="100px">
+                            <el-select v-model="worknoteform.bigTypeId" placeholder="点击选择工作大类" @change="categoryChange">
+                                <el-option v-for="item in bigWorkOptions" :key="item.typeId" :label="item.typeName"
+                                    :value="item.typeId">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="所属工作小类" class="fixed-width" label-width="100px">
+                            <el-select v-model="worknoteform.smallTypeId" placeholder="点击选择工作小类"
+                                @change="workTypeChange">
+                                <el-option v-for="item in smallWorkOptions" :key="item.smallTypeId"
+                                    :label="item.workSmallType" :value="item.smallTypeId">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="所属工作项" prop="workModelId" class="fixed-width" label-width="100px">
+                            <el-select v-model="worknoteform.moduleId" placeholder="点击选择工作项" @change="getWorkNote">
+                                <el-option v-for="item in workModelList" :key="item.moduleId" :label="item.workItem"
+                                    :value="item.moduleId">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                    </el-form>
+                    <div class="ul-wrap float clear">
+                        <div class="fixed-width"><span class="module-label">累计工作时长</span>{{worknotes.workingHours}}</div>
+                        <div class="fixed-width"><span class="module-label">累计工作次数</span>{{worknotes.workCount}}</div>
+                    </div>
+                    <el-table :data="worknotes.tableData" :cell-style="{'text-align':'center'}"
+                        :row-style="{height: '44px','font-size':'14px'}" border
+                        :header-cell-style="{background:'#f4f8fb',height:'44px','font-size':'14px','font-weight':'bold','text-align':'center'}">
+                        <el-table-column prop="workBigType" label="工作大类" width="180"></el-table-column>
+                        <el-table-column prop="workSmallType" label="工作小类" width="180"></el-table-column>
+                        <el-table-column prop="workItem" label="工作项" width="180"></el-table-column>
+                        <el-table-column prop="workContent" label="工作内容"></el-table-column>
+                        <el-table-column prop="workHours" label="工作时长"></el-table-column>
+                        <el-table-column prop="outputName" label="附件"></el-table-column>
+                        <el-table-column prop="workTime" label="工作日期"></el-table-column>
+                        <el-table-column prop="createrName" label="创建人"></el-table-column>
+                    </el-table>
+                </div>
+                <!--工作量-->
+                <div>
+                    <div class="sm-title">
+                        <span class="blue-span"></span><span>工作量</span>
+                    </div>
+                    <div class="ul-wrap float clear">
+                        <div class="fixed-width"><span class="module-label">工作大类</span>{{jobNum.workBigType}}</div>
+                        <div class="fixed-width"><span class="module-label">工作小类</span>{{jobNum.workSmallType}}</div>
+                        <div class="fixed-width"><span class="module-label">标准工时</span>{{jobNum.modelCode}}
+                            {{jobNum.normalHours}}{{jobNum.unit}}</div>
+                    </div>
+                    <el-form :model="jobNum" size="small" ref="ruleForm" :rules="rules" :inline="true">
+                        <el-form-item label="难度系数" prop="difficultDegree" class="fixed-width" label-width="100px">
+                            <el-select v-model="jobNum.difficultDegree" placeholder="请选择" @change="getDifficultDegree"
+                                :disabled="disabled">
+                                <el-option v-for="tab in difficultDegreeList" :key="tab.value" :label="tab.label"
+                                    :value="tab.value">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item label="数量" prop="workNum" class="fixed-width" label-width="100px">
+                            <el-input type="number" v-model="jobNum.workNum" style="width: 25%;" @input="getWorkNum">
+                            </el-input>
+                        </el-form-item>
+                        <el-form-item label="工时" prop="workTime" :required="workTimeRequired" class="fixed-width" label-width="100px">
+                            <!--<el-input type="text" v-model="jobNum.workTime" style="width: 25%;"></el-input>-->
+                            {{jobNum.workTime}}
+                        </el-form-item>
+                        <!-- <el-form-item label="工作内容" label-width="100px">
+								<el-input type="text" v-model="jobNum.workContent" style="width: 25%;"></el-input>
+							</el-form-item> -->
+                        <!---->
+                        <el-form-item label="工作内容" required label-width="100px"><!--prop="workContent"-->
+                            <div id="div1">
+                                <p class="put-in" contenteditable placeholder="编辑内容不能超过500字"></p>
+                            </div>
+                        </el-form-item>
+                        <!-- <el-form-item label="输出物" label-width="100px">
+            <form action="/workload/ " method="post" enctype="multipart/form-data" target="frameName"
+                id="frm-reg">
+                <input type="file" name="files" multiple class="el-upload__input" id="upload_input"
+                    @change="uploadInput">
+                <el-button size="small" type="primary" @click="clickInput">选择文件</el-button>
+                <p id="filenames">{{jobNum.fileName}}</p>
+                <input type="hidden" name="demandId" :value="params.demandId">
+                <input type="hidden" name="moduleId" :value="params.moduleId">
+                <button type="submit" @click="submitUpload" id="sub" class="upload-button">上传文件</button>
+            </form>
+        </el-form-item> -->
+
+                        <div>
+                        <el-form-item v-if="jobNum.outputName && jobNum.outputName.length > 0" label="已上传文件"
+                            v-show="showIt" label-width="100px">
+                            <el-tag style="margin-right: 10px;" v-for="item in jobNum.outputName" :key="item.name"
+                                closable :url="item.url" @close="handleClose(item)">
+                                {{item.name}}
+                            </el-tag>
+                        </el-form-item>
+                        </div>
+
+                        <el-form-item label="上传文件" label-width="100px">
+                            <el-upload action="" class="upload-demo" :on-progress="fileProgress"
+                                :on-remove="handleRemove" :before-remove="beforeRemove" :show-file-list="fileList"
+                                multiple :file-list="fileList">
+                                <el-button size="small" type="primary">选择文件</el-button>
+                                <div slot="tip" class="el-upload__tip">（支持批量上传文件）</div>
+                                <div slot="tip" class="el-upload__tip">附件支持图片、文档、压缩包，如名称相同则进行覆盖更新，如名称不同则进行新增</div>
+                            </el-upload>
+                        </el-form-item>
+
+                    </el-form>
+
+                    <iframe src="" frameborder="0" name="frameName" style="width: 0;height: 0" id="iframe"></iframe>
+                </div>
+                <el-button type="primary" @click="onSubmit('ruleForm')" size="small" style="margin-left: 100px;">保存
+                </el-button>
+                <el-button @click="goBack" class="quxiao2" size="small">取消</el-button>
+            </el-tab-pane>
+        </el-tabs>
+    </div>
+</body>
+<script th:src="@{/js/vue.min.js}"></script>
+<script th:src="@{/js/axios.min.js}"></script>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/bootstrap.min.js}"></script>
+<script th:src="@{/ruoyi/js/ry-ui.js}"></script>
+<script th:src="@{/ruoyi/js/common.js?v=4.5.0}"></script>
+<script th:src="@{/js/wangEditor.min.js}"></script>
+<script th:src="@{/ajax/libs/layer/layer.min.js}"></script>
+<script th:src="@{/js/element.min.js}"></script>
+<script th:src="@{/js/jquery.form.min.js}"></script>
+<script type="text/javascript">
+    $('#pay-qrcode').click(function () {
+        var html = $(this).html();
+        parent.layer.open({
+            title: false,
+            type: 1,
+            closeBtn: false,
+            shadeClose: true,
+            area: ['600px', '360px'],
+            content: html
+        });
+    });
+
+    const app = new Vue({
+        el: '#app-jobs',
+        data() {
+            let validateWorkTime = (rule, value, callback) => {
+                if (this.jobNum.workTimeType !== '0') {
+                    return
+                }
+                if (value === '' || value === null || value === undefined ) {
+                    callback(new Error('工时为必填项'));
+                } else {
+                    callback();
+                }
+            };
+            return {
+                content: '核算工作量',
+                informations: {}, // 基础信息
+                worknotes: { // 工作笔记
+                    tableData: [],
+                    workHours: '',
+                    workCount: '',
+                },
+                worknoteform: {}, // 工作笔记表单
+                jobNum: {
+                    difficultDegree: '',
+                    normalHours: '',
+                    workContent: '',
+                    outputName: '', // 文件上传
+                    outputUrl: '', // 文件上传
+                }, // 工作量
+                difficultDegreeList: [],
+                fileList: [],
+                oldFileList: [], // 回显的文件
+                activeName: 'first',
+                currentPage1: 5,
+                currentPage2: 5,
+                currentPage3: 5,
+                currentPage4: 4,
+                bigWorkOptions: [],
+                smallWorkOptions: [],
+                workModelList: [],
+                params: {},
+                inputData: {
+                    demandId: '',
+                    modelId: ''
+                },
+                // 校验部分
+                rules: {
+                    difficultDegree: [{
+                        required: true,
+                        message: '请选择难度系数',
+                        trigger: 'change'
+                    }],
+                    workNum: [{
+                        required: true,
+                        message: '请输入数量',
+                        trigger: 'blur'
+                    }],
+                    workTime: [{
+                        validator: validateWorkTime,
+                        message: '工时为必填项',
+                        trigger: 'blur'
+                    }],
+                    workContent:[{
+                        required: true,
+                        message: '请输入工作内容',
+                        trigger: 'blur'
+                    }],
+                },
+                workTimeRequired: false,
+                disabled: false,
+                showIt: true,
+                activeName: 'first'
+            }
+        },
+        mounted() {
+            // this.ruleFormInit()
+            var workNote = $('#nodeId').text();
+            // 实例化一个模板
+            const editor = new wangEditor('#div1')
+            // 配置 onchange 回调函数，将数据同步到 vue 中
+            editor.config.onchange = (newHtml) => {
+                this.editorData = newHtml
+            }
+            // 关闭粘贴样式的过滤
+            editor.config.pasteFilterStyle = false
+            // 忽略粘贴内容中的图片
+            editor.config.pasteIgnoreImg = true
+            // 自定义处理粘贴的文本内容
+            editor.config.pasteTextHandle = function (content) {
+                // content 即粘贴过来的内容（html 或 纯文本），可进行自定义处理然后返回
+                return content.trim() /*+ '<p>在粘贴内容后面追加一行</p>'*/
+            }
+            // 构造
+            editor.create()
+            this.editor = editor
+            // 重置校验规则
+            this.$nextTick(() => {
+                this.$refs['ruleForm'].resetFields()
+            })
+        },
+        methods: {
+            handleClick(tab, event) {
+                console.log(tab, event);
+            },
+            handleSizeChange(val) {
+                console.log(`每页 ${val} 条`);
+            },
+            handleCurrentChange(val) {
+                console.log(`当前页: ${val}`);
+            },
+            handleChange(file, fileList) {
+                if (fileList.length > 0) {
+                    this.form.fileList = [fileList[fileList.length - 1]] // 这一步，是 展示最后一次选择的csv文件
+                }
+            },
+            clickInput() {
+                $('.el-upload__input').click()
+            },
+            upload() {
+                var value = $(".el-upload__input").val();
+                $(".set-value").attr("value", value);
+            },
+            /*获取工作大类*/
+            getworkCateList: function () {
+                const getList = axios({
+                    method: 'post',
+                    url: "/note/getWorkCategories",
+                });
+                getList.then(res => {
+                    if (res.data.code === 0) {
+                        this.bigWorkOptions = res.data.data;
+                    } else {
+                        this.bigWorkOptions = [];
+                    }
+                });
+                getList.catch(err => {
+                    console.log(err)
+                });
+            },
+            /*根据工作大类查询工作小类*/
+            categoryChange: function (val, flag) {
+                if (flag !== 'first') {
+                    this.worknoteform.smallTypeId = '';
+                    this.worknoteform.moduleId = '';
+                    this.worknotes = {}
+                }
+                const formData = new FormData();
+                formData.append('bigTypeId', val)
+                formData.append('demandId', this.params.demandId)
+                formData.append('workDate', this.params.workDate)
+                const getList = axios({
+                    method: 'post',
+                    url: "/workload/findSmallType",
+                    data: formData
+                });
+                getList.then(res => {
+                    if (res.data.code === 0) {
+                        this.smallWorkOptions = res.data.data
+                    } else {
+                        this.smallWorkOptions = [];
+                    }
+                });
+                getList.catch(err => {
+                    console.log(err)
+                });
+            },
+            /*根据工作小类查询工作项*/
+            workTypeChange: function (val, flag) {
+                if (flag !== 'first') {
+                    this.worknoteform.moduleId = '';
+                    this.worknotes = {}
+                }
+                const formData = new FormData();
+                formData.append('smallTypeId', val)
+                formData.append('demandId', this.params.demandId)
+                formData.append('workDate', this.params.workDate)
+                const getList = axios({
+                    method: 'post',
+                    url: "/workload/findWorkItem",
+                    data: formData
+                });
+                getList.then(res => {
+                    if (res.status === 200) {
+                        this.workModelList = res.data.data
+
+                    } else {
+                        this.workModelList = [];
+                    }
+                });
+                getList.catch(err => {
+                    console.log(err)
+                });
+            },
+            /*查询基本信息*/
+            getInformation: function () {
+                const formData = new FormData();
+                formData.append('demandId', this.params.demandId)
+                const getList = axios({
+                    method: 'post',
+                    url: "/workload/getDemandById",
+                    data: formData
+                });
+                getList.then(res => {
+                    if (res.data.code === 0) {
+                        this.informations = res.data.data
+
+                    } else {
+                        this.informations = {};
+                    }
+                });
+                getList.catch(err => {
+                    console.log(err)
+                });
+            },
+            /*查询工作笔记*/
+            getWorkNote: function (val) {
+                const formData = new FormData();
+                if (val) {
+                    formData.append('moduleId', val)
+                } else {
+                    formData.append('moduleId', this.params.moduleId)
+                }
+                formData.append('demandId', this.params.demandId)
+                formData.append('bigTypeId', this.params.bigTypeId)
+                formData.append('smallTypeId', this.params.smallTypeId)
+                formData.append('workDate', this.params.workDate)
+
+                const getList = axios({
+                    method: 'post',
+                    url: "/workload/findNote",
+                    data: formData
+                });
+                getList.then(res => {
+                    if (res.data.code === 0) {
+                        this.worknotes = res.data.data[0];
+                        this.worknotes.tableData = res.data.data[1];
+
+                    } else {
+                        this.worknotes = [];
+                    }
+                });
+                getList.catch(err => {
+                    console.log(err)
+                });
+            },
+            /*查询工作量*/
+            getJob: function () {
+                const formData = new FormData();
+                formData.append('workloadId', this.params.workloadId)
+                const getList = axios({
+                    method: 'post',
+                    url: "/workload/getWorkloadById",
+                    data: formData
+                });
+                getList.then(res => {
+                    if (res.data.code === 0) {
+                        this.jobNum = res.data.data
+                        if (res.data.data.outputName != null && res.data.data.outputUrl != null) {
+                            let newArrName = res.data.data.outputName && res.data.data.outputName.split(',')
+                            let outputUrl = res.data.data.outputUrl;
+                            let newArr = res.data.data.outputName && res.data.data.outputName.split(',')
+                            let arr = [];
+
+                            for (let i = 0; i < newArrName.length; i++) {
+                                arr.push({
+                                    "name": newArr[i],
+                                    "url": outputUrl
+                                })
+                            }
+                            this.jobNum.outputName = arr
+                            this.showIt = true
+                        }
+                        // 计算难度系数
+                        var floor = parseFloat(this.jobNum.difficultFloor); // 下限
+                        var cile = parseFloat(this.jobNum.difficultCeiling); // 上限
+                        this.difficultDegreeList = [];
+                        for (var i = floor; i <= cile + 0.1; i += 0.1) {
+                            this.difficultDegreeList.push({
+                                'label': i.toFixed(1),
+                                'value': i.toFixed(1)
+                            })
+                        }
+                        // 工时是否为必填项
+                        if (this.jobNum.workTimeType === '0') { // 为0时必填
+                            this.workTimeRequired = true
+                        } else {
+                            this.disabled = true
+                            this.$refs.ruleForm.fields.map(i => {
+                                if (i.prop === 'difficultDegree') {
+                                    i.clearValidate()
+                                }
+                            })
+                            this.$nextTick(() => {
+                                this.showIt = '1'
+                            })
+
+                        }
+                        this.jobNum.workloadId = this.params.workloadId;
+                        this.editor.txt.html(this.jobNum.workContent) // 编辑
+                        // res.data.data.workDesc
+                        if (!this.jobNum.difficultDegree) {
+                            this.ruleFormInit()
+                        }
+
+                    } else {
+                        this.jobNum = {};
+                    }
+                });
+                getList.catch(err => {
+                    console.log(err)
+                });
+            },
+            /*获取url参数*/
+            getQueryVariable(variable) {
+                var query = window.location.search.substring(1);
+                var vars = query.split("&");
+                /*vars=vars.toString().replace(/%20/g,"");  // 如果有 %20 则去除替换成 ''*/
+                for (var i = 0; i < vars.length; i++) {
+                    var pair = vars[i].split("=");
+                    if (pair[0] == variable) {
+                        return pair[1];
+                    }
+                }
+            },
+            /*获取url参数2*/
+            getParams() {
+                this.params.demandId = this.getQueryVariable("demandId");
+                this.params.bigTypeId = this.getQueryVariable("bigTypeId");
+                this.params.smallTypeId = this.getQueryVariable("smallTypeId");
+                this.params.workloadId = this.getQueryVariable("workloadId");
+                this.params.moduleId = this.getQueryVariable("moduleId");
+                this.params.workDate = this.getQueryVariable("workDate");
+                this.getInformation(); // 查询基本信息
+                this.getWorkNote(); // 查询工作笔记
+                this.getJob(); // 查询工作量
+                // select 放值
+                this.worknoteform.bigTypeId = this.params.bigTypeId;
+                this.worknoteform.smallTypeId = this.params.smallTypeId;
+                this.worknoteform.moduleId = this.params.moduleId;
+                // 获取工作小类
+                this.categoryChange(this.params.bigTypeId, 'first')
+                // 获取工作项
+                this.workTypeChange(this.params.smallTypeId, 'first');
+            },
+            getDifficultDegree(val) {
+                if ((this.jobNum.workNum !== null && this.jobNum.workNum !== undefined) && this.jobNum.workTimeType === '0') {
+                    this.jobNum.workTime = (parseFloat(this.jobNum.workNum) * parseFloat(val) * parseFloat(this.jobNum.normalHours))
+                        .toFixed(2);
+                }
+            },
+            getWorkNum(val) {
+                if ((this.jobNum.difficultDegree !== null && this.jobNum.difficultDegree !== undefined) && this.jobNum.workTimeType ===
+                    '0') {
+                    this.jobNum.workTime = (parseFloat(val) * parseFloat(this.jobNum.difficultDegree) * parseFloat(this.jobNum.normalHours))
+                        .toFixed(2);
+                }
+            },
+            /*保存*/
+            onSubmit(formName) {
+                let isReturn = false;
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        isReturn = true
+                        console.log(valid)
+                    } else {
+                        console.log('error submit!!');
+                        isReturn = false
+                        return false;
+                    }
+                });
+                if (isReturn == false) return false;
+                new Promise((resolve, reject) => {
+                    const formDataUpLoad = new FormData();
+                    formDataUpLoad.append('workloadId', this.params.workloadId)
+                    formDataUpLoad.append('demandId', this.params.demandId)
+                    formDataUpLoad.append('moduleId', this.params.moduleId)
+                    for (let item of this.fileList) {
+                        console.log(item)
+                        formDataUpLoad.append('files', item.raw)
+                    };
+                    const uploadFiles = axios({
+                        method: 'post',
+                        url: "/workload/uploadFiles",
+                        data: formDataUpLoad
+                    });
+                    uploadFiles.then((res) => {
+                        if (res.data.code === 0) {
+                            this.jobNum.hasOutput = res.data.data.hasOutput
+                            this.jobNum.outputName = res.data.data.outputName
+                            this.jobNum.outputUrl = res.data.data.outputUrl
+                            this.showIt = false
+                        } else {
+                            this.jobNum.outputName = '';
+                            this.jobNum.hasOutput = '';
+                            this.jobNum.outputUrl = ''
+                            //this.$message.error(res.data.msg);
+                        }
+                        resolve(res) // 这里会将res传下去
+                    })
+                }).then((res) => { // 这里接受了 res
+                    console.log(res) // 这是上传的回调
+                    var arrRes = this.jobNum;
+                    // 获取html
+                    var html = this.editor.txt.html().replace('<p>', '');
+                    html = html.replace('</p>', '');
+                    arrRes.workContent = html
+                    // 获取text
+                    var text = this.editor.txt.text();
+                    arrRes.workText = text
+                    const formData = new FormData();
+                    for (tab in arrRes) {
+                        if (arrRes[tab] !== null) {
+                            formData.append(tab, arrRes[tab])
+                        }
+                    }
+                    console.log(arrRes)
+                    const getList = axios({
+                        method: 'post',
+                        url: "/workload/checkWorkloadById",
+                        data: formData
+                    });
+                    getList.then(res => {
+                        if (res.data.code === 0) {
+                            this.$message({
+                                message: res.data.msg,
+                                type: 'success'
+                            });
+                            /*核算完之后返回列表*/
+                            setTimeout(function () {
+                                $.modal.closeTab();
+                                window.location.href = '/workload/jobs'
+                            }, 1000)
+                        } else {
+                            this.$message.error(res.data.msg);
+                        }
+                    });
+                    getList.catch(err => {
+                        console.log(err)
+                    });
+                })
+            },
+            goBack() {
+                $.modal.closeTab();
+                // window.location.href = "javascript:history.go(-1)";
+                window.location.href = '/workload/jobs'
+            },
+            // 重置校验规则
+            ruleFormInit() {
+                // 重置校验规则
+                this.$nextTick(() => {
+                    this.$refs['ruleForm'].resetFields()
+                })
+            },
+
+            // 上传文件 操作
+            // 自定义去重
+            mySetFileter(arr) {
+                let newArr = []
+                let msgNumber = 0;
+                for (var i = 0; i < arr.length; i++) {
+                    var item = arr[i]
+                    for (var j = i + 1; j < arr.length; j++) {
+                        if (item.name == arr[j].name) {
+                            msgNumber++
+                            if (msgNumber == 1) {
+                                this.$message.error('添加的数据已存在');
+                            }
+                            arr.splice(j, 1)
+                            i--
+                        }
+                    }
+                };
+                newArr = arr
+                return newArr
+            },
+            fileProgress(event, file, fileList) {
+                let newList = this.mySetFileter(fileList)
+                this.fileList = newList
+            },
+
+            handleRemove(file, fileList) {
+                this.fileList = fileList
+            },
+
+            beforeRemove(file, fileList) {
+                return this.$confirm(`确定移除 ${file.name}？`);
+            },
+            // 上传文件 操作  end
+            // 删除已上传的文件
+            handleClose(item) {
+                this.$confirm(`确定移除 ${item.name}？`).then(() => {
+                    let str = '';
+                    this.jobNum.outputName.forEach((i) => {
+                        if (item.name != i.name) {
+                            str += i.name + ','
+                        }
+                    })
+                    str = str.substring(0, str.lastIndexOf(","));
+                    let formData = new FormData()
+                    formData.append('fileUrl', item.url)
+                    formData.append('fileName', item.name)
+                    formData.append('newFileName', str)
+                    formData.append('workloadId', this.params.workloadId)
+                    const dele = axios({
+                        method: 'post',
+                        url: "/workload/deleteFile",
+                        data: formData
+                    });
+
+                    dele.then((res) => {
+                        if (res.data.code == 0) {
+                            this.jobNum.outputName.splice(this.jobNum.outputName.indexOf(item), 1);
+                            this.$message({
+                                message: res.data.msg,
+                                type: 'success'
+                            });
+                        } else {
+                            this.$message.error(res.data.msg);
+                        }
+                    })
+                });
+            }
+        },
+        created: function () {
+            this.getworkCateList(); // 获取工作大类
+            this.getParams();
+
+        }
+    })
+</script>
+
+</html>

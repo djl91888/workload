@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('需求列表')" />
+</head>
+<body class="gray-bg">
+     <div class="container-div">
+        <div class="row">
+            <div class="col-sm-12 search-collapse">
+                <form id="formId">
+                    <div class="select-list">
+                        <ul>
+                            <li>
+                                <label>CQ单号：</label>
+                                <input type="text" name="cqNum"/>
+                            </li>
+                            <li>
+                                <label>0新建，1进行中，2已上线，3关闭：</label>
+                                <select name="demandStatus">
+                                    <option value="">所有</option>
+                                    <option value="-1">代码生成请选择字典属性</option>
+                                </select>
+                            </li>
+                            <li>
+                                <label>需求的创建时间：</label>
+                                <input type="text" name="demandTime"/>
+                            </li>
+                            <li>
+                                <label>创建人姓名：</label>
+                                <input type="text" name="createrName"/>
+                            </li>
+                            <li class="select-time">
+                                <label>记录的创建时间：</label>
+                                <input type="text" class="time-input" id="startTime" placeholder="开始时间" name="params[beginCreateTime]"/>
+                                <span>-</span>
+                                <input type="text" class="time-input" id="endTime" placeholder="结束时间" name="params[endCreateTime]"/>
+                            </li>
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+
+            <div class="btn-group-sm" id="toolbar" role="group">
+                <a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="module:demand:add">
+                    <i class="fa fa-plus"></i> 添加
+                </a>
+                <a class="btn btn-primary single disabled" onclick="$.operate.edit()" shiro:hasPermission="module:demand:edit">
+                    <i class="fa fa-edit"></i> 修改
+                </a>
+                <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="module:demand:remove">
+                    <i class="fa fa-remove"></i> 删除
+                </a>
+                <a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="module:demand:export">
+                    <i class="fa fa-download"></i> 导出
+                </a>
+            </div>
+            <div class="col-sm-12 select-table table-striped">
+                <table id="bootstrap-table"></table>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('module:demand:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('module:demand:remove')}]];
+        var prefix = ctx + "module/demand";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                exportUrl: prefix + "/export",
+                modalName: "需求",
+                columns: [{
+                    checkbox: true
+                },
+                {
+                    field: 'demandId',
+                    title: '需求id',
+                    visible: false
+                },
+                {
+                    field: 'cqNum',
+                    title: 'CQ单号'
+                },
+                {
+                    field: 'demandContent',
+                    title: '需求内容'
+                },
+                {
+                    field: 'demandStatus',
+                    title: '0新建，1进行中，2已上线，3关闭'
+                },
+                {
+                    field: 'demandTime',
+                    title: '需求的创建时间'
+                },
+                {
+                    field: 'createrName',
+                    title: '创建人姓名'
+                },
+                {
+                    field: 'createTime',
+                    title: '记录的创建时间'
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.edit(\'' + row.demandId + '\')"><i class="fa fa-edit"></i>编辑</a> ');
+                        actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.demandId + '\')"><i class="fa fa-remove"></i>删除</a>');
+                        return actions.join('');
+                    }
+                }]
+            };
+            $.table.init(options);
+        });
+    </script>
+</body>
+</html>

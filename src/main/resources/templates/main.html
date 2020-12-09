@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!--360浏览器优先以webkit内核解析-->
+		<title>若依介绍</title>
+		<link rel="shortcut icon" href="favicon.ico">
+		<link href="../static/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
+		<link href="../static/css/font-awesome.min.css" th:href="@{/css/font-awesome.min.css}" rel="stylesheet" />
+		<link href="../static/css/main/animate.min.css" th:href="@{/css/main/animate.min.css}" rel="stylesheet" />
+		<link href="../static/css/main/style.min862f.css" th:href="@{/css/main/style.min862f.css}" rel="stylesheet" />
+		<link href="../static/css/elementUI.css" th:href="@{/css/elementUI.css}" rel="stylesheet" />
+		<link href="../static/css/newCss/main.css" th:href="@{/css/newCss/main.css}" rel="stylesheet" />
+
+	</head>
+	<style>
+		body{
+			padding: 30px;
+			box-sizing: border-box;
+			position: relative;
+		}
+		.create{
+			position: absolute;
+			right: 50px;
+			top: 40px;
+			z-index: 1000;
+		}
+		.el-date-editor .el-range-separator{
+			width: 6%;
+		}
+		.el-table .cell {
+			white-space: nowrap;
+		}
+
+}
+	</style>
+
+	<body class="gray-bg">
+		<div id="app-gray" class="row  border-bottom white-bg dashboard-header">
+
+
+			<!-- 新建需求 -->
+			<el-button class="create" type="primary" v-if="isShowAll!=0" @click="handleClick($event,'add')">新建需求</el-button>
+			<!-- 新建需求 end -->
+			<!-- 切换选项 -->
+			<el-tabs v-model="activeName" @tab-click="handleTabClick">
+				<el-tab-pane label="我的需求" name="first">
+					<div>
+						<el-form label-width="80px" :model="formLabelAlign">
+							<el-row :gutter="20">
+								<el-col :span="6">
+									<el-form-item label="需求内容">
+										<el-input placeholder="请输入需求内容" v-model="formLabelAlign.demandContent"></el-input>
+									</el-form-item>
+								</el-col>
+								<el-col :span="6">
+									<el-form-item label="CQ单号">
+										<el-input placeholder="请输入CQ单号" v-model="formLabelAlign.cqNum"></el-input>
+									</el-form-item>
+								</el-col>
+								<el-col :span="7">
+									<el-form-item label="创建时间">
+										<el-date-picker v-model="formLabelAlign.date" type="datetimerange" align="right" unlink-panels
+										 range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="pickerOptions"
+										 value-format="yyyyMMddHHmmss">
+										</el-date-picker>
+										<!--<el-date-picker
+												v-model="value1"
+												type="datetimerange"
+												range-separator="至"
+												start-placeholder="开始日期"
+												end-placeholder="结束日期">
+										</el-date-picker>-->
+									</el-form-item>
+								</el-col>
+							</el-row>
+							<el-row :gutter="20">
+								<el-col :span="6">
+									<el-form-item label="需求类型">
+										<el-select v-model="formLabelAlign.demandTypeId" placeholder="选择需求类型" clearable>
+											<el-option v-for="item in DemandTypeOtions" :key="item.demandTypeId" :label="item.demandTypeName" :value="item.demandTypeId">
+											</el-option>
+										</el-select>
+									</el-form-item>
+								</el-col>
+								<el-col :span="6">
+									<el-form-item label="需求状态">
+										<el-select v-model="formLabelAlign.demandStatus" placeholder="选择需求状态" clearable>
+											<el-option label="新建" value="0"></el-option>
+											<el-option label="进行中" value="1"></el-option>
+											<el-option label="已上线" value="2"></el-option>
+											<el-option label="关闭" value="3"></el-option>
+										</el-select>
+									</el-form-item>
+								</el-col>
+								<el-col :span="6">
+									<el-form-item label="创建人">
+										<el-select v-model="formLabelAlign.createrId" placeholder="选择创建人" clearable filterable>
+											<el-option v-for="item in createrNameOptions" :key="item.userId" :label="item.userName" :value="item.userId">
+											</el-option>
+										</el-select>
+									</el-form-item>
+
+								</el-col>
+								<el-col :span="6">
+									<el-form-item label="提出人">
+										<el-input placeholder="请输入提出人" v-model="formLabelAlign.sourceBy"></el-input>
+									</el-form-item>
+								</el-col>
+
+
+							</el-row>
+							<el-row>
+								<el-col>
+									<el-form-item>
+										<el-button type="primary" icon="el-icon-search" @click="searchHandle">搜索</el-button>
+										<el-button type="primary" @click="downExcel('')">导出</el-button>
+									</el-form-item>
+								</el-col>
+							</el-row>
+						</el-form>
+					</div>
+
+					<!-- 表格 -->
+					<el-table :data="tableData" stripe style="width: 100%;" max-height="350"  :row-style="{height: '40px'}" border>
+						<!--<el-table-column prop="demandId" label="需求id" width="180" style="display:none">
+						</el-table-column>-->
+						<el-table-column prop="cqNum" label="CQ单号">
+						</el-table-column>
+						<el-table-column prop="demandTypeName" label="需求类型">
+						</el-table-column>
+						<el-table-column prop="demandContent" label="需求内容">
+						</el-table-column>
+						<el-table-column prop="demandStatus" label="需求状态">
+							<template slot-scope="scope">
+								<span v-if="scope.row.demandStatus === '0'">新建</span>
+								<span v-if="scope.row.demandStatus === '1'">进行中</span>
+								<span v-if="scope.row.demandStatus === '2'">已上线</span>
+								<span v-if="scope.row.demandStatus === '3'">关闭</span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="sourceType" label="需求来源">
+						</el-table-column>
+						<el-table-column prop="sourceBy" label="提出人">
+						</el-table-column>
+						<el-table-column prop="createTime" label="创建时间">
+							<template slot-scope="scope" v-if="scope.row.createTime">
+								{{scope.row.createTime.slice(0,4)+'-'+scope.row.createTime.slice(4,6)+'-'+scope.row.createTime.slice(6,8)+' ' + scope.row.createTime.slice(8,10)+':'+scope.row.createTime.slice(10,12)+':'+scope.row.createTime.slice(12,14)}}
+							</template>
+						</el-table-column>
+						<el-table-column prop="createrName" label="创建人">
+						</el-table-column>
+						<el-table-column prop="expectWorkload" label="预计工作量" width="100">
+						</el-table-column>
+						<el-table-column prop="onlineTime" label="上线时间">
+							<template slot-scope="scope" v-if="scope.row.onlineTime">
+								{{scope.row.onlineTime.slice(0,4)+'-'+scope.row.onlineTime.slice(4,6)+'-'+scope.row.onlineTime.slice(6,8)+' ' + scope.row.onlineTime.slice(8,10)+':'+scope.row.onlineTime.slice(10,12)+':'+scope.row.onlineTime.slice(12,14)}}
+							</template>
+						</el-table-column>
+						<el-table-column prop="address" label="操作" width="240">
+							<template slot-scope="scope">
+								<el-button @click="handleClick(scope.row,'worknote')" type="text" size="small">新建笔记</el-button>
+								<el-button @click="handleClick(scope.row,'jobs','')" type="text" size="small">工作量</el-button>
+								<el-button @click="handleClick(scope.row,'see')" type="text" size="small">查看</el-button>
+								<el-button type="text" size="small" @click="handleClick(scope.row,'edit')" v-if="scope.row.editStatus!=='0'">修改</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+					<!-- 表格 end -->
+
+					<!-- 分页 -->
+					<div class="block">
+						<el-pagination align="right" @size-change="myHandleSizeChange" @current-change="myHandleCurrentChange"
+						 :current-page="myCurrentPage" :page-sizes="[5, 10, 50, 100]" :page-size="myPageSize" layout="total,  prev, pager, next, jumper"
+						 :total="myList.length">
+						</el-pagination>
+					</div>
+					<!-- 分页 end-->
+				</el-tab-pane>
+				<el-tab-pane label="全部需求" v-if="isShowAll == 1" name="second">
+					<div>
+						<el-form label-width="80px" :model="allFormLabelAlign">
+							<el-row :gutter="20">
+								<el-col :span="6">
+									<el-form-item label="需求内容">
+										<el-input placeholder="请输入需求内容" v-model="allFormLabelAlign.demandContent"></el-input>
+									</el-form-item>
+								</el-col>
+								<el-col :span="6">
+									<el-form-item label="CQ单号">
+										<el-input placeholder="请输入CQ单号" v-model="allFormLabelAlign.cqNum"></el-input>
+									</el-form-item>
+								</el-col>
+								<el-col :span="7">
+									<el-form-item label="创建时间">
+										<el-date-picker v-model="allFormLabelAlign.date" type="datetimerange" align="right" unlink-panels
+										 range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" :picker-options="pickerOptions"
+										 value-format="yyyyMMddHHmmss">
+										</el-date-picker>
+									</el-form-item>
+								</el-col>
+							</el-row>
+							<el-row :gutter="20" style="height: 20px">
+								<el-col :span="6">
+									<el-form-item label="需求类型">
+										<el-select v-model="allFormLabelAlign.demandTypeId" placeholder="选择需求类型" clearable>
+											<el-option v-for="item in DemandTypeOtions" :key="item.demandTypeId" :label="item.demandTypeName" :value="item.demandTypeId">
+											</el-option>
+										</el-select>
+									</el-form-item>
+								</el-col>
+								<el-col :span="6">
+									<el-form-item label="需求状态">
+										<el-select v-model="allFormLabelAlign.demandStatus" placeholder="选择需求状态" clearable>
+											<el-option label="新建" value="0"></el-option>
+											<el-option label="进行中" value="1"></el-option>
+											<el-option label="已上线" value="2"></el-option>
+											<el-option label="关闭" value="3"></el-option>
+										</el-select>
+									</el-form-item>
+								</el-col>
+								<el-col :span="6">
+									<el-form-item label="创建人">
+										<el-select v-model="allFormLabelAlign.createrId" placeholder="选择创建人" clearable filterable>
+											<el-option v-for="item in createrNameOptions" :key="item.userId" :label="item.userName" :value="item.userId">
+											</el-option>
+										</el-select>
+									</el-form-item>
+								</el-col>
+								<el-col :span="6">
+									<el-form-item label="提出人">
+										<el-input placeholder="请输入提出人" v-model="allFormLabelAlign.sourceBy"></el-input>
+									</el-form-item>
+								</el-col>˝
+							</el-row>
+							<el-row>
+								<el-col>
+									<el-form-item>
+										<el-button type="primary" icon="el-icon-search" @click="allSearchHandle">搜索</el-button>
+										<el-button type="primary" @click="downExcel('all')">导出</el-button>
+									</el-form-item>
+								</el-col>
+							</el-row>
+						</el-form>
+					</div>
+					<!-- 表格 -->
+					<el-table  :data="allTableData" stripe style="width: 100%;" max-height="350"  :row-style="{height: '40px'}" border>
+						<!--<el-table-column prop="demandId" label="需求id" style="display: none">
+						</el-table-column>-->
+						<el-table-column prop="cqNum" label="CQ单号">
+						</el-table-column>
+						<el-table-column prop="demandTypeName" label="需求类型">
+						</el-table-column>
+						<el-table-column prop="demandContent" label="需求内容">
+						</el-table-column>
+						<el-table-column prop="demandStatus" label="需求状态">
+							<template slot-scope="scope">
+								<span v-if="scope.row.demandStatus === '0'">新建</span>
+								<span v-if="scope.row.demandStatus === '1'">进行中</span>
+								<span v-if="scope.row.demandStatus === '2'">已上线</span>
+								<span v-if="scope.row.demandStatus === '3'">关闭</span>
+							</template>
+						</el-table-column>
+						<el-table-column prop="sourceType" label="需求来源">
+						</el-table-column>
+						<el-table-column prop="sourceBy" label="提出人">
+						</el-table-column>
+						<el-table-column prop="createTime" label="创建时间">
+							<template slot-scope="scope" v-if="scope.row.createTime">
+								{{scope.row.createTime.slice(0,4)+'-'+scope.row.createTime.slice(4,6)+'-'+scope.row.createTime.slice(6,8)+' ' + scope.row.createTime.slice(8,10)+':'+scope.row.createTime.slice(10,12)+':'+scope.row.createTime.slice(12,14)}}
+							</template>
+						</el-table-column>
+						<el-table-column prop="createrName" label="创建人">
+						</el-table-column>
+						<el-table-column prop="expectWorkload" label="预计工作量" width="100">
+						</el-table-column>
+						<el-table-column prop="onlineTime" label="上线时间">
+							<template slot-scope="scope" v-if="scope.row.onlineTime">
+								{{scope.row.onlineTime.slice(0,4)+'-'+scope.row.onlineTime.slice(4,6)+'-'+scope.row.onlineTime.slice(6,8)+' ' + scope.row.onlineTime.slice(8,10)+':'+scope.row.onlineTime.slice(10,12)+':'+scope.row.onlineTime.slice(12,14)}}
+							</template>
+						</el-table-column>
+						<el-table-column prop="address" label="操作" width="240">
+							<template slot-scope="scope">
+								<el-button @click="handleClick(scope.row,'worknote')" type="text" size="small">新建笔记</el-button>
+								<el-button @click="handleClick(scope.row,'jobs','all')" type="text" size="small">工作量</el-button>
+								<el-button @click="handleClick(scope.row,'see')" type="text" size="small">查看</el-button>
+								<el-button type="text" size="small" @click="handleClick(scope.row,'edit')">修改</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+					<!-- 表格 end -->
+					<!-- 分页 -->
+					<div class="block">
+						<el-pagination align="right" @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
+						 :page-sizes="[5, 10, 50, 100]" :page-size="pageSize" layout="total,  prev, pager, next, jumper" :total="myAllTableData.length">
+						</el-pagination>
+					</div>
+					<!-- 分页 end-->
+				</el-tab-pane>
+			</el-tabs>
+			<!-- 切换选项 end-->
+
+
+		</div>
+		<script th:src="@{/js/vue.min.js}"></script>
+		<script th:src="@{/js/axios.min.js}"></script>
+		<script th:src="@{/js/jquery.min.js}"></script>
+		<script th:src="@{/ruoyi/js/ry-ui.js}"></script>
+		<script th:src="@{/ruoyi/js/common.js?v=4.5.0}"></script>
+		<script th:src="@{/js/bootstrap.min.js}"></script>
+		<script th:src="@{/ajax/libs/layer/layer.min.js}"></script>
+		<script th:src="@{/js/element.min.js}"></script>
+		<script type="text/javascript">
+			// <div class="block">
+			// 	<el-pagination align="right" @size-change="myHandleSizeChange" @current-change="myHandleCurrentChange" :current-page="myCurrentPage"
+			// 	 :page-sizes="[100, 200, 300, 400]" :page-size="myPageSize" layout="total, sizes, prev, pager, next, jumper" :total="tableData.length">
+			// 	</el-pagination>
+			// </div>
+			//设置http前缀
+			const fUrl = 'http://192.168.0.225:8888';
+			const app = new Vue({
+				el: '#app-gray',
+				data: {
+					activeName: 'first',
+					/*我的需求*/
+					formLabelAlign: {
+						demandContent: '',
+						cqNum: '',
+						date: '',
+						demandTypeId: '',
+						demandStatus: '',
+						createrId: '',
+						sourceBy: ''
+					},
+					tableData: [],
+					myPageSize: 5,
+					myCurrentPage: 1,
+					myList: [],
+					/*全部需求*/
+					allFormLabelAlign: {
+						demandContent: '',
+						cqNum: '',
+						date: '',
+						demandTypeId: '',
+						demandStatus: '',
+						createrId: '',
+						sourceBy: ''
+					},
+					currentPage: 1,
+					pageSize: 5,
+					myAllTableData: [],
+					allTableData: [],
+					pickerOptions: {
+						shortcuts: [{
+							text: '最近一周',
+							onClick(picker) {
+								const end = new Date();
+								const start = new Date();
+								start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+								picker.$emit('pick', [start, end]);
+							}
+						}, {
+							text: '最近一个月',
+							onClick(picker) {
+								const end = new Date();
+								const start = new Date();
+								start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+								picker.$emit('pick', [start, end]);
+							}
+						}, {
+							text: '最近三个月',
+							onClick(picker) {
+								const end = new Date();
+								const start = new Date();
+								start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+								picker.$emit('pick', [start, end]);
+							}
+						}]
+					},
+					value1: '',
+					value2: '',
+					value: '',
+					/*全部需求*/
+					currentPage1: 5,
+					currentPage2: 5,
+					currentPage3: 5,
+					currentPage4: 4,
+					/*需求类型*/
+					DemandTypeOtions: [],
+					createrNameOptions: [],
+					//disabled: false,
+					isShowAll: null, // 是否显示全部 1:显示 0：不显示
+				},
+				mounted() {},
+				methods: {
+					handleTabClick(tab, event) {
+						console.log(tab, event);
+					},
+					handleSizeChange(val) {
+						this.pageSize = val
+					},
+					handleCurrentChange(val) {
+						this.currentPage = val
+						let list = this.myAllTableData;
+						this.allTableData = this.setPages(list, val, this.pageSize)
+					},
+					/*搜索*/
+					searchHandle() {
+						var arrRes = [],
+							arr = this.formLabelAlign;
+						for (item in arr) {
+							if (item === 'date') {
+								arrRes.push({
+									name: "createStartTime",
+									value: arr[item][0] ? arr[item][0] : ''
+								}, {
+									name: "createEndTime",
+									value: arr[item][1] ? arr[item][1] : ''
+								})
+							} else {
+								arrRes.push({
+									'name': item,
+									'value': arr[item]
+								})
+							}
+						}
+						this.getTableData(arrRes)
+					},
+					/*全部需求搜索*/
+					allSearchHandle() {
+						var arrRes = [],
+							arr = this.allFormLabelAlign;
+						for (item in arr) {
+							if (item === 'date') {
+								arrRes.push({
+									name: "createStartTime",
+									value: arr[item][0] ? arr[item][0] : ''
+								}, {
+									name: "createEndTime",
+									value: arr[item][1] ? arr[item][1] : ''
+								})
+							} else {
+								arrRes.push({
+									'name': item,
+									'value': arr[item]
+								})
+							}
+						}
+						this.getAllTableData(arrRes)
+					},
+					getTableData: function(arrRes) {
+						const formData = new FormData();
+						if (arrRes) {
+							arrRes.forEach((tab, index) => {
+								formData.append(tab.name, tab.value)
+							})
+						}
+						const getList = axios({
+							method: 'post',
+							url: "/need/NeedMyList",
+							data: formData
+						});
+						getList.then(res => {
+							if (res.status === 200) {
+								this.tableData = res.data
+								this.myList = res.data
+								this.tableData = this.setPages(res.data, this.myCurrentPage, this.myPageSize)
+
+
+							} else {
+								this.tableData = [];
+							}
+						});
+						getList.catch(err => {
+							console.log(err)
+						});
+					},
+					getAllTableData: function(arrRes) {
+						const formData = new FormData();
+						if (arrRes) {
+							arrRes.forEach((tab, index) => {
+								formData.append(tab.name, tab.value)
+							})
+						}
+						const getList = axios({
+							method: 'post',
+							url: "/need/NeedLists",
+							data: formData
+						});
+						getList.then(res => {
+							if (res.status === 200) {
+								console.log(res)
+								console.log(res.data)
+								this.allTableData = res.data
+								this.myAllTableData = res.data
+								this.allTableData = this.setPages(res.data, this.currentPage, this.pageSize)
+							} else {
+								this.allTableData = [];
+								this.page.pageNum = 1;
+								this.page.pageSize = 0;
+								this.page.total = 0;
+							}
+						});
+						getList.catch(err => {
+							console.log(err)
+						});
+					},
+					/*获取需求类型*/
+					getDemandType: function() {
+						const getList = axios({
+							method: 'post',
+							url: "/need/NeedType",
+						});
+						getList.then(res => {
+							if (res.status === 200) {
+								this.DemandTypeOtions = res.data
+							} else {
+								this.DemandTypeOtions = [];
+							}
+						});
+						getList.catch(err => {
+							console.log(err)
+						});
+					},
+					/*获取创建人*/
+					getCreaterName: function() {
+						const getList = axios({
+							method: 'post',
+							url: "/need/needCreator",
+						});
+						getList.then(res => {
+							if (res.status === 200) {
+								this.createrNameOptions = res.data
+							} else {
+								this.createrNameOptions = [];
+							}
+						});
+						getList.catch(err => {
+							console.log(err)
+						});
+					},
+					/*查看*/
+					handleClick(val, flag, all) {
+						var realUrl = '';
+						if (flag === 'edit') {
+							/*if (val.editStatus === '0') {
+								this.$message({
+									message: '警告哦，没有编辑权限',
+									type: 'warning'
+								});
+							} else {*/
+							window.location.href = "/need/newCreatePage?demandId=" + val.demandId + "&flag=" + flag;
+							// realUrl = '';
+							// var editNoteUrl = "/need/newCreatePage?demandId=" + val.demandId + "&flag=" + flag;
+							// $.modal.openTab('编辑需求',editNoteUrl,realUrl);
+							/*}*/
+						} else if (flag === 'see') {
+							window.location.href = "/need/newCreatePage?demandId=" + val.demandId + "&flag=" + flag;
+							// realUrl = '';
+							// var seeUrl = "/need/newCreatePage?demandId=" + val.demandId + "&flag=" + flag;
+							// $.modal.openTab('查看需求',seeUrl,realUrl);
+						} else if (flag === 'worknote') {
+							// window.location.href = "/note/editworknote?demandId=" + val.demandId + "&flag=" + "" + "&demandTypeId=" + val.demandTypeId;
+							realUrl = '/note/worknote';
+							var noteUrl = "/note/editworknote?demandId=" + val.demandId + "&flag=" + "" + "&demandTypeId=" + val.demandTypeId+"&from="+"main";
+							$.modal.openTab('新建笔记',noteUrl,realUrl);
+						} else if (flag === 'jobs') {
+							/*let name = escape(val.demandContent);
+							name = unescape(name);  
+							console.log(name)*/
+							//window.location.href = "/workload/jobs?demandId=" + val.demandId + "&flag=" + '' + "&demandContent=" + name + "&all=" + all;
+							// window.location.href = "/workload/jobs?demandId="+val.demandId +"&flag="+'';
+							realUrl = '/workload/jobs';
+							var jobUrl = "/workload/jobs?demandId="+val.demandId+"&flag="+'';
+							$.modal.openTab('工作量',jobUrl,realUrl);
+						} else {
+							window.location.href = "/need/newCreatePage"
+						}
+					},
+					/*查询用户是否是主管*/
+					/*searchIsSupervisor: function() {
+						const getList = axios({
+							method: 'get',
+							url: "/need/permission"
+						});
+						getList.then(res => {
+							console.log(res)
+							if (res.data.code === 0) {
+								if (this.boo == null || this.boo == undefined || this.boo == "") {
+									this.disabled = true
+								} else if (this.boo == 1) {
+									this.disabled = false
+								}
+							} else {}
+						});
+						getList.catch(err => {
+							console.log(err)
+						});
+					},*/
+					/*导出*/
+					downExcel(val) {
+						var url = '',
+							arr = {},
+							arrRes = [];
+						if (val === 'all') {
+							url = '/need/exportAll'
+							arr = this.allFormLabelAlign;
+						} else {
+							url = '/need/export'
+							arr = this.formLabelAlign;
+						}
+						for (item in arr) {
+							if (item === 'date') {
+								arrRes.push({
+									name: "createStartTime",
+									value: arr[item][0] ? arr[item][0] : ''
+								}, {
+									name: "createEndTime",
+									value: arr[item][1] ? arr[item][1] : ''
+								})
+							} else {
+								arrRes.push({
+									'name': item,
+									'value': arr[item]
+								})
+							}
+						}
+						var that = this;
+						$.post(url, arrRes, function(res) {
+							if (res.code == 0) {
+								window.location.href = "/common/download?fileName=" + res.msg + "&delete=" + true;
+							} else {
+								that.$message.error(res.msg);
+							}
+						});
+					},
+					// 更换总展示条数
+					myHandleSizeChange(size) {
+						this.myPageSize = size
+					},
+					// 切换页
+					myHandleCurrentChange(index) {
+						this.myCurrentPage = index
+						let list = this.myList;
+						this.tableData = this.setPages(list, index, this.myPageSize)
+						console.log(this.tableData)
+					},
+
+					// 自定义分页
+					setPages(list, pageIndex, pageSize) {
+						return newList = list.slice((pageIndex - 1) * pageSize, pageIndex * pageSize)
+					},
+
+					// 获取角色
+					getPermission() {
+						let data = axios({
+							method: 'get',
+							url: "/need/permission"
+						});
+						data.then(res => {
+							console.log(res)
+							if (res.status === 200) {
+								this.isShowAll = res.data
+							}
+						});
+						data.catch(err => {
+							console.log(err)
+						});
+					}
+
+				},
+				created: function() {
+
+					/*this.searchIsSupervisor();*/
+					this.getDemandType();
+					this.getCreaterName();
+					this.getTableData();
+					this.getAllTableData();
+					this.getPermission();
+				}
+			})
+		</script>
+
+	</body>
+</html>

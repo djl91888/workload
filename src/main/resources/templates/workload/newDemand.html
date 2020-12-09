@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--360浏览器优先以webkit内核解析-->
+    <title>新建需求</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="../../static/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
+    <link href="../../static/css/font-awesome.min.css" th:href="@{/css/font-awesome.min.css}" rel="stylesheet" />
+    <link href="../../static/css/main/animate.min.css" th:href="@{/css/main/animate.min.css}" rel="stylesheet" />
+    <link href="../../static/css/main/style.min862f.css" th:href="@{/css/main/style.min862f.css}" rel="stylesheet" />
+    <link href="../../static/css/elementUI.css" th:href="@{/css/elementUI.css}" rel="stylesheet" />
+    <link href="../../static/css/newCss/main.css" th:href="@{/css/newCss/main.css}" rel="stylesheet" />
+</head>
+<style>
+    /*.el-page-header {
+        margin-bottom: 20px;
+    }*/
+
+    #div1 {
+        z-index: 1;
+        position: relative;
+        margin-bottom: 20px;
+        /*width: 100%;*/
+
+    }
+
+    .work-inline .el-form-item__content {
+        width: 270px;
+    }
+
+    .time-input {
+        /*display: none;*/
+    }
+
+    .el-form-item--mini.el-form-item,
+    .el-form-item--small.el-form-item {
+        margin-bottom: 12px;
+    }
+
+    .flexRow {
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+
+    .flexRow>div {
+        margin-right: 20px;
+        margin-bottom: 0;
+    }
+    body{
+        padding: 30px;
+        box-sizing: border-box;
+        position: relative;
+        padding-top: 10px;
+        padding-left: 25px;
+        padding-right: 25px;
+    }
+    .el-form-item__content .el-input{
+        width: 238px;
+        height: 40px;
+        /*margin-bottom: 12px;*/
+    }
+    .search{
+        background: #0086e5;
+    }
+    .el-form-item {
+        margin-bottom: 12px;
+    }
+    .el-tabs__item{
+        font-size: 16px;
+    }
+    .search{
+        background: #0086e5;
+    }
+    .flexRow{
+        margin-bottom: 12px;
+    }
+    .el-form-item__content .el-input--small .el-input__inner {
+        height: 40px;
+        line-height: 40px;
+        width: 238px;
+    }
+    .el-form-item--small .el-form-item__content, .el-form-item--small .el-form-item__label{
+        line-height: 40px;
+    }
+    .title{
+        font-size: 16px;
+        font-weight: bold;
+        padding: 30px;
+        color: #515a6e;
+    }
+    .el-form-item__label{
+        color: #515a6e;
+    }
+    .el-tabs__item {
+        font-size: 16px;
+        color: #515a6e;
+    }
+    .el-form-item--small .el-form-item__content, .el-form-item--small .el-form-item__label{
+        color: #515a6e;
+    }
+    .el-tabs__item{
+        cursor: default;
+    }
+    .quxiao{
+        width: 56px;
+        height: 32px;
+        border-radius: 4px;
+        border: 1px solid #409EFF;
+        color: #409EFF;
+        background: #fff;
+        font-size: 12px;
+        position: relative;
+        top: 5px;
+        left: -5px;
+    }
+    .quxiao:active{
+        border: 1px solid #409EFF;
+    }
+    .quxiao2{
+        border: 1px solid #409EFF;
+        color: #409EFF;
+    }
+    .el-tabs__content{
+        padding-top: 4px;
+    }
+    .dashboard-header{
+        padding-left: 30px;
+    }
+    .fuze .el-form-item__error{
+        margin-left: 100px;
+        top: 95%;
+    }
+    .xg .el-input{
+        height: auto;
+    }
+</style>
+
+<body class="gray-bg">
+    <div id="app-newDemand" class="row  border-bottom white-bg dashboard-header">
+        <el-tabs v-model="activeName">
+            <el-tab-pane :label="content" name="first">
+        <!--返回 + 标题-->
+
+        <!--<el-page-header @back="goBack" :content="content"></el-page-header>--> <!--label-width="160px"-->
+        <!--返回 + 标题 end-->
+        <el-form ref="ruleForm" :model="form" :rules="rules" :inline="true" class="demo-form-inline" label-width="100px"
+            size="small">
+            <!--<div class="flexRow">-->
+                <el-form-item label="需求类型" prop="demandTypeId">
+                    <el-select v-model="form.demandTypeId" placeholder="选择需求类型" :disabled="disabled">
+                        <el-option v-for="item in DemandTypeOtions" :key="item.demandTypeId"
+                            :label="item.demandTypeName" :value="item.demandTypeId">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="CQ单号">
+                    <el-input  maxlength="15" show-word-limit v-model="form.cqNum" placeholder="输入CQ单号" style="width: 98%;"
+                        :disabled="disabled"></el-input>
+                </el-form-item>
+
+                <el-form-item>
+                    <el-radio v-model="form.radio" label="1" :disabled="disabled">后期补充</el-radio>
+                    <el-radio v-model="form.radio" label="2" :disabled="disabled">无</el-radio>
+                </el-form-item>
+            <br>
+            <!--</div>-->
+
+
+            <!--<div class="flexRow">-->
+                <el-form-item label="需求内容" prop="demandContent">
+                    <el-input v-model="form.demandContent" placeholder="输入需求内容"
+                        :disabled="disabled||edit"></el-input>
+                </el-form-item>
+                <el-form-item label="创建时间" prop="createTime" >
+                    <!--<el-date-picker type="datetime" placeholder="选择日期" v-model="form.createTime" style="width: 86%;"
+						 value-format="yyyyMMddHHmmss" :disabled="disabled" class="time-picker"></el-date-picker>-->
+                    <!--<el-date-picker value-format="yyyyMMddHHmmss" v-model="form.createTime" type="datetime" placeholder="选择日期" :disabled="disabled">
+						</el-date-picker>-->
+                    <el-date-picker :disabled="disabled" v-model="form.createTime" type="datetime" placeholder="选择日期时间"
+                        align="right" :picker-options="pickerOptions" value-format="yyyyMMddHHmmss">
+                    </el-date-picker>
+                </el-form-item>
+
+
+            <!--</div>-->
+
+
+
+           <!-- <div class="flexRow">-->
+                <el-form-item label="需求来源" prop="sourceId">
+                    <el-select v-model="form.sourceId" placeholder="请选择需求来源" :disabled="disabled">
+                        <el-option v-for="item in DemandSourceOtions" :key="item.sourceId" :label="item.sourceType"
+                            :value="item.sourceId" :disabled="disabled">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="来源名称" prop="sourceBy">
+                    <el-input v-model="form.sourceBy" placeholder="请输入来源名称" :disabled="disabled" maxlength="10" show-word-limit></el-input>
+                </el-form-item>
+            <!--</div>-->
+
+
+            <!--<div class="flexRow">-->
+                <el-form-item label="需求状态" prop="demandStatus">
+                    <el-select v-model="form.demandStatus" placeholder="请选择需求状态" @change="getSelectSource"
+                        :disabled="disabled">
+                        <el-option label="新建" value="0"></el-option>
+                        <el-option label="进行中" value="1"></el-option>
+                        <el-option label="已上线" value="2"></el-option>
+                        <el-option label="关闭" value="3"></el-option>
+                    </el-select>
+                </el-form-item>
+            <!--</div>-->
+            <br>
+
+            <el-form-item label="需求描述">
+                <div id="div1">
+                    <p></p>
+                </div>
+            </el-form-item>
+            <!--<div class="flexRow">-->
+                <el-form-item label="负责人员" prop="perSon" class="fuze">
+                    <el-form-item label="产品">
+                        <el-select v-model="form.perSon[100]"  :clearable="clearable.productClearable" :disabled="disabled" @change="forceChange" filterable>
+                            <el-option v-for="item in productList" :key="item.userId" :label="item.userName"
+                                :value="item.userId">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="研发">
+                        <el-select v-model="form.perSon[103]" :clearable="clearable.researchClearable" :disabled="disabled" @change="forceChange" filterable>
+                            <el-option v-for="item in researchList" :key="item.userId" :label="item.userName"
+                                :value="item.userId">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="运营">
+                        <el-select v-model="form.perSon[101]" :clearable="clearable.operateClearable" :disabled="disabled" @change="forceChange" filterable>
+                            <el-option v-for="item in operateList" :key="item.userId" :label="item.userName"
+                                :value="item.userId">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="测试">
+                        <el-select v-model="form.perSon[104]" :clearable="clearable.testClearable" :disabled="disabled" @change="forceChange" filterable>
+                            <el-option v-for="item in testList" :key="item.userId" :label="item.userName"
+                                :value="item.userId">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="设计">
+                        <el-select v-model="form.perSon[102]" :clearable="clearable.designClearable" :disabled="disabled" @change="forceChange" filterable>
+                            <el-option v-for="item in designList" :key="item.userId" :label="item.userName"
+                                :value="item.userId">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="数据">
+                        <el-select v-model="form.perSon[140]" :clearable="clearable.dataClearable" :disabled="disabled" @change="forceChange" filterable>
+                            <el-option v-for="item in dataList" :key="item.userId" :label="item.userName"
+                                :value="item.userId">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="运维">
+                        <el-select v-model="form.perSon[105]" :clearable="clearable.maintenanceClearable" :disabled="disabled" @change="forceChange" filterable>
+                            <el-option v-for="item in maintenanceList" :key="item.userId" :label="item.userName"
+                                :value="item.userId">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-form-item>
+            <!--</div>-->
+            <el-form-item label="相关人员" style="margin-bottom: 0">
+                <el-select v-model="form.relevant" clearable multiple placeholder="请选择" :disabled="disabled" filterable class="xg">
+                    <el-option v-for="item in relatedOptions" :key="item.userId" :label="item.userName"
+                        :value="item.userId">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="预计功能点" class="work-inline">
+                <div style="display: flex">
+                <el-input v-model="form.expectWorkload" style="width: 80%" :disabled="disabled"></el-input>
+                <el-form-item style="width: 55px" label="个"></el-form-item>
+                </div>
+            </el-form-item>
+            <el-form-item label="上线时间">
+                <el-date-picker value-format="yyyyMMddHHmmss" v-model="form.onlineTime" type="datetime"
+                    placeholder="选择上线时间" :disabled="disabled">
+                </el-date-picker>
+            </el-form-item>
+            <br>
+            <el-form-item>
+                <el-button type="primary" @click="onSubmit('ruleForm')" style="margin-left: 100px" :disabled="disabled">保存</el-button>
+                <el-button @click="goBack" class="quxiao2" size="small">取消</el-button>
+            </el-form-item>
+            <!--<button class="quxiao" @click="goBack">取消</button>-->
+
+        </el-form>
+            </el-tab-pane>
+        </el-tabs>
+    </div>
+</body>
+<script th:src="@{/js/vue.min.js}"></script>
+<script th:src="@{/js/axios.min.js}"></script>
+<script th:src="@{/js/jquery.min.js}"></script>
+<script th:src="@{/js/bootstrap.min.js}"></script>
+<script th:src="@{/ajax/libs/layer/layer.min.js}"></script>
+<script th:src="@{/js/wangEditor.min.js}"></script>
+<script th:src="@{/js/element.min.js}"></script>
+<script type="text/javascript">
+    $('#pay-qrcode').click(function () {
+        var html = $(this).html();
+        parent.layer.open({
+            title: false,
+            type: 1,
+            closeBtn: false,
+            shadeClose: true,
+            area: ['600px', '360px'],
+            content: html
+        });
+    });
+
+    const app = new Vue({
+        el: '#app-newDemand',
+        data(){
+            let validatePerson = (rule, value, callback) => {
+                var flag = false
+                for (item in value){
+                    if(value[item]!==''){
+                        flag = true
+                    }
+                }
+                if(!flag){
+                    callback(new Error('请至少选择一位负责人'));
+                } else {
+                    callback();
+                }
+            };
+            let validateDemandContent = (rule, value, callback) => {
+                var regu = '[\\s\\\\/:\\*\\?\\\"<>\\|]';
+                var re = new RegExp(regu);
+                if(!value){
+                    callback(new Error('请输入需求内容'));
+                } else if(re.test(value)){
+                    callback(new Error('不支持/ \ : * ?< > |输入'));
+                } else {
+                    callback();
+                }
+            };
+            return{
+                qq:false,
+                content: '新建需求',
+                form: {
+                    demandTypeId: '',
+                    cqNum: '',
+                    demandContent: '',
+                    createTime: '',
+                    sourceId: '',
+                    sourceBy: '',
+                    demandStatus: '',
+                    relevant: [],
+                    expectWorkload: '',
+                    onlineTime: '',
+                    perSon: {
+                        100: '', // 产品
+                        103: '', // 研发
+                        101: '', // 运营
+                        104: '', // 测试
+                        102: '', // 设计
+                        140: '', // 数据
+                        105: '' // 运维
+                    },
+
+                },
+                tableData: [],
+                currentPage1: 5,
+                currentPage2: 5,
+                currentPage3: 5,
+                currentPage4: 4,
+                DemandTypeOtions: [], // 需求类型
+                chargeOptions: [], // 负责人员
+                relatedOptions: [], // 相关人员
+                DemandSourceOtions: [], // 需求来源
+                productList: [], // 产品
+                researchList: [], // 研发
+                operateList: [], // 运营
+                testList: [], // 测试
+                designList: [], // 设计
+                dataList: [], // 数据
+                maintenanceList: [],// 运维
+                params: {
+                    flag: '',
+                    demandId: ''
+                },
+                disabled: false,
+
+
+                // 校验部分
+                rules: {
+                    demandTypeId: [{
+                        required: true,
+                        message: '请选择需求类型',
+                        trigger: 'change'
+                    }],
+                    radio: [{
+                        required: true,
+                        message: '请选择补充时间',
+                        trigger: 'change'
+                    }],
+                    createTime: [{
+                        required: true,
+                        message: '请选择创建日期',
+                        trigger: 'change'
+                    }],
+                    sourceId: [{
+                        required: true,
+                        message: '请选择需求来源',
+                        trigger: 'change'
+                    }],
+                    sourceBy: [{
+                        required: true,
+                        message: '请选择来源名称',
+                        trigger: 'change'
+                    }],
+                    demandStatus: [{
+                        required: true,
+                        message: '请选择需求状态',
+                        trigger: 'change'
+                    }],
+                    expectWorkload: [{
+                        required: true,
+                        message: '请选择预计功能点',
+                        trigger: 'change'
+                    }],
+                    onlineTime: [{
+                        required: true,
+                        message: '请选择上线时间',
+                        trigger: 'change'
+                    }],
+                    /*demandContent: [{
+                        required: true,
+                        message: '输入需求内容',
+                        trigger: 'blur'
+                    }],*/
+                    demandContent: [{
+                        validator: validateDemandContent,
+                        trigger: 'blur'
+                    }],
+                    perSon: [{
+                        validator: validatePerson,
+                        trigger: 'change'
+                    }],
+                },
+                clearable:{
+                    productClearable:true ,// 产品
+                    researchClearable: true, // 研发
+                    operateClearable: true, // 运营
+                    testClearable: true, // 测试
+                    designClearable: true, // 设计
+                    dataClearable: true, // 数据
+                    maintenanceClearable:true// 运维
+                },
+                pickerOptions: {
+                    shortcuts: [{
+                        text: '今天',
+                        onClick(picker) {
+                            picker.$emit('pick', new Date());
+                        }
+                    }, {
+                        text: '昨天',
+                        onClick(picker) {
+                            const date = new Date();
+                            date.setTime(date.getTime() - 3600 * 1000 * 24);
+                            picker.$emit('pick', date);
+                        }
+                    }, {
+                        text: '一周前',
+                        onClick(picker) {
+                            const date = new Date();
+                            date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
+                            picker.$emit('pick', date);
+                        }
+                    }]
+                },
+                activeName: 'first',
+                edit:false
+            }
+
+        },
+        mounted() {
+            var workNote = $('#nodeId').text();
+            // 实例化一个模板
+            const editor = new wangEditor('#div1')
+            // 配置 onchange 回调函数，将数据同步到 vue 中
+            editor.config.onchange = (newHtml) => {
+                this.editorData = newHtml
+            }
+            // 构造
+            editor.create()
+            this.editor = editor
+        },
+        methods: {
+            getSelectType(val) {
+                this.selectType = val;
+            },
+            goBack() {
+                window.location.href = "javascript:history.go(-1)";
+            },
+            getSelectSource() {
+            },
+            // 提交
+            onSubmit(formName) {
+                let flag = true
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        console.log(valid)
+                        flag = true
+                    } else {
+                        console.log('error submit!!1111');
+                        flag = false
+                        return false;
+                    }
+                });
+                if (!flag) {
+                    return false;
+                }
+
+                var arrRes = [],
+                    arr = this.form,
+                    person = [];
+                for (var item in arr) {
+                    if (item === 'perSon') {
+                        for (var tab in arr[item]) {
+                            if (arr[item][tab] !== '') {
+                                person.push(arr[item][tab] + '-' + tab)
+                            }
+                        }
+                        arrRes.push({
+                            name: "perSon",
+                            value: person
+                        })
+                    } else {
+                        arrRes.push({
+                            'name': item,
+                            'value': arr[item]
+                        })
+                    }
+                }
+                let isDemandDesc = false
+                arrRes.forEach((tab,index)=>{
+                    if(tab.name === 'demandDesc'){
+                        tab.value = this.editor.txt.html();
+                        isDemandDesc = true;
+                    }
+                })
+                if(!isDemandDesc){
+                    arrRes.push({
+                        'name': 'demandDesc',
+                        'value': this.editor.txt.html()
+                    })
+                }
+                const formData = new FormData();
+                if (arrRes) {
+                    arrRes.forEach((tab, index) => {
+                        if(tab.value!==null){
+                            formData.append(tab.name, tab.value)
+                        }
+                    })
+                }
+                if (this.params.demandId) { // 修改
+                    const getList = axios({
+                        method: 'post',
+                        url: "/need/needUpdate",
+                        data: formData
+                    });
+                    getList.then(res => {
+                        if (res.data.code === 0) {
+                            this.$message({
+                                message: '修改成功',
+                                type: 'success'
+                            });
+                            /*修改完之后返回列表*/
+                            setTimeout(function () {
+                                window.location.href='/system/main'
+                            },1000)
+
+                        } else {
+                            this.$message.error(res.data.msg);
+                        }
+                    });
+                    getList.catch(err => {
+                        console.log(err)
+                    });
+                } else { // 新建
+                    const getList = axios({
+                        method: 'post',
+                        url: "/need/needAddlist",
+                        data: formData
+                    });
+                    getList.then(res => {
+                        if (res.data.code === 0) {
+                            this.$message({
+                                message: '保存成功',
+                                type: 'success'
+                            });
+                            /*保存完之后返回列表*/
+                            setTimeout(function () {
+                                window.location.href='/system/main'
+                            },1000)
+                            this.form = {
+                                demandTypeId: '',
+                                cqNum: '',
+                                demandContent: '',
+                                createTime: '',
+                                sourceId: '',
+                                sourceBy: '',
+                                demandStatus: '',
+                                relevant: [],
+                                expectWorkload: '',
+                                onlineTime: '',
+                                perSon: {
+                                    100: '', // 产品
+                                    103: '', // 研发
+                                    101: '', // 运营
+                                    104: '', // 测试
+                                    102: '', // 设计
+                                    140: '', // 数据
+                                    105: '' // 运维
+                                }
+                            }
+                            this.editor.txt.clear()
+                            this.$refs['ruleForm'].resetFields();
+                        } else {
+                            this.$message.error(res.data.msg);
+                        }
+                    });
+                    getList.catch(err => {
+                        console.log(err)
+                    });
+                }
+
+            },
+            /*获取需求类型*/
+            getDemandType: function () {
+                const getList = axios({
+                    method: 'post',
+                    url: "/need/NeedType",
+                });
+                getList.then(res => {
+                    if (res.status === 200) {
+                        this.DemandTypeOtions = res.data
+                    } else {
+                        this.DemandTypeOtions = [];
+                    }
+                });
+                getList.catch(err => {
+                    console.log(err)
+                });
+            },
+            /*获取相关人员*/
+            getRelated: function () {
+                const getList = axios({
+                    method: 'post',
+                    url: "/need/needContact",
+                });
+                getList.then(res => {
+                    console.log(res)
+                    if (res.status === 200) {
+                        this.relatedOptions = res.data
+                    } else {
+                        this.relatedOptions = [];
+                    }
+                });
+                getList.catch(err => {
+                    console.log(err)
+                });
+            },
+            /*获取负责人员*/
+            getNeedOwner: function () {
+                const getList = axios({
+                    method: 'post',
+                    url: "/need/NeedOwner",
+                });
+                getList.then(res => {
+                    if (res.status === 200) {
+                        this.productList = res.data[100]; // 产品
+                        this.researchList = res.data[103]; // 研发
+                        this.operateList = res.data[101]; // 运营
+                        this.testList = res.data[104]; // 测试
+                        this.designList = res.data[102]; // 设计
+                        this.dataList = res.data[140]; // 数据
+                        this.maintenanceList = res.data[105]; // 运维
+                    } else {
+                        this.productList = []; // 产品
+                        this.researchList = []; // 研发
+                        this.operateList = []; // 运营
+                        this.testList = []; // 测试
+                        this.designList = []; // 设计
+                        this.dataList = []; // 数据
+                        this.maintenanceList = []; // 运维
+                    }
+                });
+                getList.catch(err => {
+                    console.log(err)
+                });
+            },
+            /*获取需求来源*/
+            DemandSource: function () {
+                const getList = axios({
+                    method: 'post',
+                    url: "/need/NeedSources",
+                });
+                getList.then(res => {
+                    console.log(res)
+                    if (res.status === 200) {
+                        this.DemandSourceOtions = res.data
+                    } else {
+                        this.DemandSourceOtions = [];
+                    }
+                });
+                getList.catch(err => {
+                    console.log(err)
+                });
+            },
+            /*获取url参数*/
+            getQueryVariable(variable) {
+                var query = window.location.search.substring(1);
+                var vars = query.split("&");
+                /*vars=vars.toString().replace(/%20/g,"");  // 如果有 %20 则去除替换成 ''*/
+                console.log(vars);
+                for (var i = 0; i < vars.length; i++) {
+                    var pair = vars[i].split("=");
+                    if (pair[0] == variable) {
+                        return pair[1];
+                    }
+                }
+            },
+            /*获取url参数2*/
+            getParams() {
+                this.params.flag = this.getQueryVariable("flag");
+                this.params.demandId = this.getQueryVariable("demandId");
+                console.log(this.params.flag + ':' + this.params.demandId);
+
+                if (this.params.flag === 'see') {
+                    this.getFormData(this.params.demandId, 'see');
+                    this.disabled = true;
+                    this.content = '查看需求'
+                } else if (this.params.flag === 'edit') {
+                    this.getFormData(this.params.demandId);
+                    this.disabled = false;
+                    this.edit = true;
+                    this.content = '编辑需求'
+                } else {
+                    this.disabled = false;
+                    this.content = '新增需求'
+                }
+            },
+            /*查看*/
+            getFormData(demandId, flag) {
+                const formData = new FormData();
+                formData.append('demandId', demandId)
+                const getList = axios({
+                    method: 'post',
+                    url: "/need/needShowUpdate",
+                    data: formData
+                });
+                getList.then(res => {
+                    if (res.status === 200) {
+                        console.log(res)
+                        this.form = res.data.thisneed[0]; // 其他
+                        this.form.relevant = [];
+                        this.form.perSon = {};
+                        res.data.thisXg.forEach((tab, index) => { // 相关人员
+                            this.form.relevant.push(tab.userId)
+                        })
+                        res.data.thisPepole.forEach((tab, index) => { // 相关人员
+                            if (tab.roleId === '100') { // 产品
+                                this.form.perSon[100] = tab.userId
+                                this.clearable.productClearable = false
+                            } else if (tab.roleId === '101') { // 运营
+                                this.form.perSon[101] = tab.userId
+                                this.clearable.operateClearable = false
+                            } else if (tab.roleId === '102') { // 设计
+                                this.form.perSon[102] = tab.userId
+                                this.clearable.designClearable = false
+                            } else if (tab.roleId === '103') { // 研发
+                                this.form.perSon[103] = tab.userId
+                                this.clearable.researchClearable = false
+                            } else if (tab.roleId === '104') { // 测试
+                                this.form.perSon[104] = tab.userId
+                                this.clearable.testClearable = false
+                            } else if (tab.roleId === '140') { // 数据
+                                this.form.perSon[140] = tab.userId
+                                this.clearable.dataClearable = false
+                            } else if (tab.roleId === '105') { // 运维
+                                this.form.perSon[105] = tab.userId
+                                this.clearable.maintenanceClearable = false
+                            }
+                        })
+                        this.editor.txt.html(res.data.thisneed[0].demandDesc)
+                        if (flag === 'see') {
+                            this.editor.$textElem.attr('contenteditable', false); // 禁用编辑功能
+                        }
+                    } else {
+                        this.form = {}
+                    }
+                });
+                getList.catch(err => {
+                    console.log(err)
+                });
+            },
+            forceChange(val) {
+                this.$forceUpdate()
+            }
+        },
+        created: function () {
+            this.getParams();
+            this.getDemandType();
+            this.getRelated();
+            this.DemandSource();
+            this.getNeedOwner();
+
+        }
+    })
+</script>
+
+</html>

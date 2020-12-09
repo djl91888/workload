@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--360浏览器优先以webkit内核解析-->
+    <title>新建笔记</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="../static/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
+    <link href="../static/css/font-awesome.min.css" th:href="@{/css/font-awesome.min.css}" rel="stylesheet" />
+    <link href="../static/css/main/animate.min.css" th:href="@{/css/main/animate.min.css}" rel="stylesheet" />
+    <link href="../static/css/main/style.min862f.css" th:href="@{/css/main/style.min862f.css}" rel="stylesheet" />
+    <link href="../static/css/elementUI.css" th:href="@{/css/elementUI.css}" rel="stylesheet" />
+
+</head>
+<style>
+    body {
+        padding: 30px;
+        box-sizing: border-box;
+        position: relative;
+        padding-top: 10px;
+        padding-left: 25px;
+        padding-right: 25px;
+    }
+
+    .el-page-header {
+        margin-bottom: 20px;
+    }
+
+    #div1 {
+        z-index: 1;
+        position: relative;
+
+    }
+
+    #div1:empty::before {
+        color: lightgrey;
+        content: attr(placeholder);
+    }
+
+    .el-upload__input {
+        display: none !important;
+        opacity: 0;
+    }
+
+    .upload-button {
+        background: #409EFF;
+        color: #fff;
+        font-size: 12px;
+        width: 80px;
+        height: 35px;
+        border: 1px solid;
+        line-height: 35px;
+        border-radius: 4px;
+    }
+
+    .set-value {
+        border: 0;
+        width: 300px;
+    }
+
+    .flex {
+        display: flex;
+    }
+
+    #filenames {
+        margin-right: 20px;
+    }
+
+    .quxiao2 {
+        border: 1px solid #409EFF;
+        color: #409EFF;
+    }
+
+    .el-form-item__content .el-input--small .el-input__inner {
+        width: 238px;
+        height: 40px;
+        line-height: 40px;
+    }
+
+    .el-form-item--small .el-form-item__content,
+    .el-form-item--small .el-form-item__label {
+        line-height: 40px;
+    }
+
+    .el-upload__tip {
+        line-height: 22px;
+    }
+
+    .el-tabs__content {
+        padding-top: 4px;
+    }
+
+    .dashboard-header {
+        padding-left: 30px;
+    }
+
+    .el-range-editor--small.el-input__inner {
+        height: 40px;
+    }
+
+    .put-in:empty::before {
+        color: lightgrey;
+        content: attr(placeholder);
+    }
+	.red-icon{
+		color: red;
+		margin-left: 10px;
+	}
+	.el-date-editor .el-range-separator{
+		width: auto;
+	}
+    .put-in:empty:before{
+        content: attr(placeholder);
+        color:#bbb;
+    }
+    .put-in:focus:before{
+        content:none;
+    }
+</style>
+
+<body class="gray-bg">
+    <div id="app-gray" class="row  border-bottom white-bg dashboard-header">
+        <el-tabs v-model="activeName">
+            <el-tab-pane :label="content" name="first">
+                <!--返回 + 标题-->
+                <!--<el-page-header @back="goBack" :content="content"></el-page-header>-->
+                <!--返回 + 标题 end-->
+
+                <el-form ref="ruleForm" :model="form" :rules="rules" label-width="110px">
+                    <el-form-item label="需求类型" prop="demandTypeId" required>
+                        <el-select v-model="form.demandTypeId" :disabled="disabled" @change="ownerDemandChange">
+                            <el-option v-for="item in DemandTypeOption" :key="item.TYPE_ID" :label="item.TYPE_NAME"
+                                :value="item.TYPE_ID">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="所属需求" prop="demandId" required>
+                        <el-select v-model="form.demandId" placeholder="点击选择需求" :disabled="disabled">
+                            <el-option v-for="item in ownerDemandOption" :key="item.DEMAND_ID"
+                                :label="item.DEMAND_CONTENT" :value="item.DEMAND_ID">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="所属工作大类" prop="workCategoryId" required>
+                        <el-select v-model="form.workCategoryId" placeholder="点击选择工作大类" @change="categoryChange"
+                            :disabled="disabled">
+                            <el-option v-for="item in workCateLists" :key="item.typeId" :label="item.typeName"
+                                :value="item.typeId">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="所属工作小类" prop="workTypeId" required>
+                        <el-select v-model="form.workTypeId" placeholder="点击选择工作小类" @change="workTypeChange"
+                            :disabled="disabled">
+                            <el-option v-for="item in workTypeList" :key="item.typeId" :label="item.typeName"
+                                :value="item.typeId">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="所属工作项" prop="workModelId" required>
+                        <el-select v-model="form.workModelId" placeholder="点击选择工作项" :disabled="disabled">
+                            <el-option v-for="item in workModelList" :key="item.modelId" :label="item.workItem"
+                                :value="item.modelId">
+                            </el-option>
+
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="工作时长" prop="workHours" required>
+                        <!--<el-input v-model="form.workHours" placeholder="输入格式为HH:mm" :disabled="disabled&&edit"></el-input>-->
+                        <!--<el-time-picker v-model="form.workHours" type="time" value-format="HH:mm" format="HH:mm"
+                            placeholder="请选择工作时长">-->
+                        </el-time-picker>
+                        <el-time-select
+							v-model="form.workHours"
+							placeholder="请选择工作时长"
+							:picker-options="{
+									start: '00:00',
+									step: '00:10',
+									end: '100:00'
+								  }"
+							value-format="HH:mm" format="HH:mm">
+					</el-time-select>
+
+                    </el-form-item>
+                    <el-form-item label="工作日期" prop="date" required style="width: 120%">
+                        <!--<el-date-picker type="date" placeholder="选择日期" v-model="form.workDate" format="yyyy 年 MM 月 dd 日"
+                            value-format="yyyy-MM-dd" :disabled="disabled"></el-date-picker>-->
+
+                        <el-date-picker
+							v-model="form.date" format="yyyy 年 MM 月 dd 日" value-format="yyyy-MM-dd" :disabled="disabled"
+							type="daterange"
+							range-separator="至"
+							start-placeholder="开始日期"
+							end-placeholder="结束日期"
+
+						>
+					</el-date-picker>
+						<span class="red-icon">(工作时长不能跨月)</span>
+
+                    </el-form-item>
+                    <el-form-item label="工作内容">
+                        <div id="div1">
+                            <p class="put-in" contenteditable placeholder="编辑内容不能超过500字"></p>
+                        </div>
+                    </el-form-item>
+                    <!-- <el-form-item label="上传附件">
+                <form action="/note/upload" method="post" enctype="multipart/form-data" target="frameName"  id="frm-reg">
+                    <input type="file" name="files" multiple class="el-upload__input" id="upload_input" @change="uploadInput">
+                    <el-button size="small" type="primary" @click="clickInput" :disabled="disabled&&edit">选择文件</el-button>
+                    <span style="font-size: 14px">（支持批量上传文件）</span>
+                    <div class="el-upload__tip">附件支持图片、文档、压缩包，如名称相同则进行覆盖更新，如名称不同则进行新增</div>
+                    <input type="hidden" name="demandType" :value="inputData.demandType">
+                    <input type="hidden" name="demandContent" :value="inputData.demandContent">
+                    <input type="hidden" name="workCategory" :value="inputData.workCategory">
+                    <input type="hidden" name="workType" :value="inputData.workType">
+                    <input type="hidden" name="workItem" :value="inputData.workItem">
+                    <div class="flex">
+                        <p id="filenames" ref="filenames">{{inputUpload.outputName}}</p>
+                        <button type="submit" @click="submitUpload" id="sub" class="upload-button" :disabled="disabled&&edit">上传文件</button>
+                    </div>
+                </form>
+            </el-form-item> -->
+
+
+                    <el-form-item v-if="oldFileList.length > 0" label="已上传文件">
+                        <span v-for="item in oldFileList">{{item.name}}</span>
+                    </el-form-item>
+
+                    <el-form-item label="上传文件">
+                        <el-upload action="" class="upload-demo" :on-progress="fileProgress" :on-remove="handleRemove"
+                            :before-remove="beforeRemove" :show-file-list="fileList" multiple :file-list="fileList">
+                            <el-button size="small" type="primary">选择文件</el-button>
+                            <div slot="tip" class="el-upload__tip">（支持批量上传文件）</div>
+                            <div slot="tip" class="el-upload__tip">附件支持图片、文档、压缩包，如名称相同则进行覆盖更新，如名称不同则进行新增</div>
+                        </el-upload>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="onSubmit('ruleForm')" size="small" :disabled="disabled&&edit">
+                            保存</el-button>
+                        <el-button @click="goBack" class="quxiao2" size="small">取消</el-button>
+                    </el-form-item>
+                </el-form>
+                <!--<div class="input" contenteditable placeholder="请输入文字"></div>-->
+            </el-tab-pane>
+        </el-tabs>
+    </div>
+    <script th:src="@{/js/vue.min.js}"></script>
+    <script th:src="@{/js/axios.min.js}"></script>
+    <script th:src="@{/js/jquery.min.js}"></script>
+    <script th:src="@{/ruoyi/js/ry-ui.js}"></script>
+    <script th:src="@{/ruoyi/js/common.js?v=4.5.0}"></script>
+    <script th:src="@{/js/bootstrap.min.js}"></script>
+    <script th:src="@{/ajax/libs/layer/layer.min.js}"></script>
+    <script th:src="@{/js/wangEditor.min.js}"></script>
+    <script th:src="@{/js/element.min.js}"></script>
+    <script th:src="@{/js/jquery.form.min.js}"></script>
+    <script type="text/javascript">
+        $('#pay-qrcode').click(function () {
+            var html = $(this).html();
+            parent.layer.open({
+                title: false,
+                type: 1,
+                closeBtn: false,
+                shadeClose: true,
+                area: ['600px', '360px'],
+                content: html
+            });
+        });
+        const app = new Vue({
+            el: '#app-gray',
+            data() {
+                /*let validateWorkHours = (rule, value, callback) => {
+                    var re = /^(?:[01]\d|2[0-3])(?::[0-5]\d)$/;
+                    if (value === '' || value === null) {
+                        callback(new Error('请输入工作时长'));
+                    } else if(!re.test(value)){
+                        callback(new Error('格式为HH:mm'));
+                    }
+                    else {
+                        callback();
+                    }
+                };*/
+                /*let validateWorkDate = (rule, value, callback) => {
+
+                    if (value === '' || value === null) {
+                        callback(new Error('请输入工作日期'));
+                    } else {
+                        var date1 = new Date(value[0].replace(/-/g, '/')).getTime();
+                        var date2 = new Date(value[1].replace(/-/g, '/')).getTime();
+                        if ((date2 - date1)/(1000 * 60 * 60 * 24)> 30) {
+                            callback(new Error('工作日期不能超过一个月'));
+                        } else {
+                            callback();
+                        }
+
+                    }
+                };*/
+
+                return {
+					pickerOptions:{
+						disabledDate(time){
+							debugger
+							let _now = Date.now(),
+									seven = 7 * 24 * 60 * 60 * 1000,
+									sevenDays = _now - seven;
+							return time.getTime() > _now || time.getTime() < sevenDays;
+							//大于当前的禁止，小于7天前的禁止
+						}
+					},
+                    content: '新建笔记',
+                    form: {
+                        demandTypeId: '', // 需求类型
+                        demandId: '', // 所属需求
+                        workCategoryId: '', // 所属工作大类
+                        workTypeId: '', // 所属工作小类
+                        workModelId: '',
+                        workHours: '04:00',
+                        date: '',
+                    },
+                    DemandTypeOption: [],
+                    ownerDemandOption: [],
+                    workCateLists: [], // 工作大类
+                    workTypeList: [], // 工作小类
+                    workModelList: [],
+                    fileList: [],
+                    oldFileList: [], // 回显的文件
+                    fileCheck: '',
+                    /*文件上传*/
+                    inputUpload: {
+                        hasOutput: '0', // 上传成功1 上传失败0
+                        outputUrl: '',
+                        outputName: '',
+                    },
+                    /*文件上传*/
+                    params: {},
+                    disabled: false,
+                    edit: true,
+                    // 校验部分
+                    rules: {
+                        demandTypeId: [{
+                            required: true,
+                            message: '请选择需求类型',
+                            trigger: 'change'
+                        }],
+                        demandId: [{
+                            required: true,
+                            message: '请选择所属需求',
+                            trigger: 'change'
+                        }],
+                        workCategoryId: [{
+                            required: true,
+                            message: '请选择所属工作大类',
+                            trigger: 'change'
+                        }],
+                        workTypeId: [{
+                            required: true,
+                            message: '请选择所属工作小类',
+                            trigger: 'change'
+                        }],
+                        workModelId: [{
+                            required: true,
+                            message: '请选择所属工作项',
+                            trigger: 'change'
+                        }],
+                        workHours: [{
+                            required: true,
+                            message: '请选择工作时长',
+                            trigger: 'change'
+                        }],
+                        /*workHours: [{
+                            validator: validateWorkHours,
+                            trigger: 'blur'
+                        }],*/
+                        date: [{
+                            required: true,
+                            message: '请选择工作日期',
+                            trigger: 'change'
+                        }],
+                        /*workDate: [{
+                            validator: validateWorkDate,
+                            trigger: 'change'
+                        }]*/
+                    },
+                    inputData: {
+                        demandType: '',
+                        demandContent: '',
+                        workCategory: '',
+                        workType: '',
+                        workItem: ''
+                    },
+                    activeName: 'first'
+                }
+            },
+            mounted() {
+                var workNote = $('#nodeId').text();
+                // 实例化一个模板
+                const editor = new wangEditor('#div1')
+                // 配置 onchange 回调函数，将数据同步到 vue 中
+                editor.config.onchange = (newHtml) => {
+                    this.editorData = newHtml
+                }
+                // 关闭粘贴样式的过滤
+                editor.config.pasteFilterStyle = false
+                // 忽略粘贴内容中的图片
+                editor.config.pasteIgnoreImg = true
+                // 自定义处理粘贴的文本内容
+                editor.config.pasteTextHandle = function (content) {
+                    // content 即粘贴过来的内容（html 或 纯文本），可进行自定义处理然后返回
+                    return content.trim() /*+ '<p>在粘贴内容后面追加一行</p>'*/
+                }
+                // 构造
+                editor.create()
+                this.editor = editor
+                // 重置校验规则
+                this.$nextTick(() => {
+                    this.$refs['ruleForm'].resetFields()
+                })
+            },
+            methods: {
+                /*新建，修改*/
+                onSubmit(formName) {
+                    let isReturn = false;
+                    this.$refs[formName].validate((valid) => {
+                        if (valid) {
+                            isReturn = true
+                            console.log(valid)
+                        } else {
+                            console.log('error submit!!');
+                            isReturn = false
+                            return false;
+                        }
+                    });
+                    if (isReturn == false) return false;
+
+                    const formData = new FormData();
+                    this.DemandTypeOption.forEach((tab, index) => {
+                        if (tab.TYPE_ID === this.form.demandTypeId) {
+                            this.inputData.demandType = tab.TYPE_NAME
+                        }
+                    })
+                    this.ownerDemandOption.forEach((tab, index) => {
+                        if (tab.DEMAND_ID === this.form.demandId) {
+                            this.inputData.demandContent = tab.DEMAND_CONTENT
+                        }
+                    })
+                    this.workCateLists.forEach((tab, index) => {
+                        if (tab.typeId === this.form.workCategoryId) {
+                            this.inputData.workCategory = tab.typeName
+                        }
+                    })
+                    this.workTypeList.forEach((tab, index) => {
+                        if (tab.typeId === this.form.workTypeId) {
+                            this.inputData.workType = tab.typeName
+                        }
+                    })
+                    this.workModelList.forEach((tab, index) => {
+                        if (tab.modelId === this.form.workModelId) {
+                            this.inputData.workItem = tab.workItem
+                        }
+                    })
+
+                    formData.append('demandType', this.inputData.demandType)
+                    formData.append('demandContent', this.inputData.demandContent)
+                    formData.append('workCategory', this.inputData.workCategory)
+                    formData.append('workType', this.inputData.workType)
+                    formData.append('workItem', this.inputData.workItem)
+                    formData.append('workDate', this.form.workDate)
+                    for (let item of this.fileList) {
+                        console.log(item)
+                        formData.append('files', item.raw)
+                    };
+
+
+                    new Promise((r, j) => {
+                        const getList = axios({
+                            method: 'post',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            url: "/note/upload",
+                            data: formData
+                        });
+                        getList.then(res => {
+                            if (res.data.code === 0) {
+                                this.inputUpload = res.data.data
+                            } else {
+                                this.inputUpload = res.data.data;
+                                //this.$message.error(res.data.msg);
+                            }
+
+                            var arrRes = [];
+                            // 内容
+                            let isDemandDesc = false
+                            var html = this.editor.txt.html().replace('<p>', '');
+                            html = html.replace('</p>', '');
+
+                            // 获取text
+                            var text = this.editor.txt.text();
+
+                            arrRes.forEach((tab, index) => {
+                                if (tab.name === 'workText') {
+                                    tab.value = text;
+                                    isDemandDesc = true;
+                                    arrRes.push({
+                                        'name': 'workDesc',
+                                        'value': html
+                                    })
+                                }
+
+
+                            })
+                            if (!isDemandDesc) {
+                                arrRes.push({
+                                    'name': 'workText',
+                                    'value': html
+                                })
+                                arrRes.push({
+                                    'name': 'workDesc',
+                                    'value': text
+                                })
+                            }
+                            //  上传文件 参数
+                            for (item in this.inputUpload) {
+                                arrRes.push({
+                                    'name': item,
+                                    'value': this.inputUpload[item]
+                                })
+                            }
+                            if (this.params.noteId) { // 修改参数
+                                arrRes.push({
+                                    'name': 'noteId',
+                                    'value': this.params.noteId
+                                }, {
+                                    'name': 'workHours',
+                                    'value': this.form.workHours
+                                })
+                            } else { // 新建参数
+                                var arr = this.form;
+                                for (item in arr) {
+									if (item === 'date') {
+										if (item !== null) {
+											arrRes.push({
+												name: "workDate",
+												value: this.form.date[0] ? this.form.date[0] : ''
+											}, {
+												name: "workDateEnd",
+												value: this.form.date[1]? this.form.date[1] : ''
+											})
+										}
+									} else {
+										arrRes.push({
+											'name': item,
+											'value': arr[item]
+										})
+									}
+                                   /* arrRes.push({
+                                        'name': item,
+                                        'value': arr[item]
+                                    })*/
+
+                                }
+                            }
+                            r(arrRes)
+                        });
+                        getList.catch(err => {
+                            console.log(err)
+                        });
+                    }).then((arrRes) => {
+                        console.log(arrRes)
+                        const formData2 = new FormData();
+                        if (arrRes) {
+                            arrRes.forEach((tab, index) => {
+                                if (tab.value !== null) {
+                                    formData2.append(tab.name, tab.value)
+                                }
+                            })
+                        }
+
+                        if (this.params.noteId) { // 修改
+                            const getList = axios({
+                                method: 'post',
+                                url: "/note/edit",
+                                data: formData2
+                            });
+                            getList.then(res => {
+                                if (res.data.code === 0) {
+                                    this.$message({
+                                        message: '修改成功',
+                                        type: 'success'
+                                    });
+                                    this.inputUpload = {
+                                        hasOutput: '0', // 上传成功1 上传失败0
+                                        outputUrl: '',
+                                        outputName: '',
+                                    }
+                                    /*修改完之后返回列表*/
+                                    setTimeout(function () {
+                                        $.modal.closeTab();
+                                        window.location.href = '/note/worknote'
+                                    }, 1000)
+                                } else {
+                                    this.$message.error(res.data.msg);
+                                }
+
+                            });
+                            getList.catch(err => {
+                                console.log(err)
+                            });
+                        } else { // 新建
+                            // return false;
+                            const getList = axios({
+                                method: 'post',
+                                url: "/note/add",
+                                data: formData2
+                            });
+                            getList.then(res => {
+                                if (res.data.code === 0) {
+                                    this.$message({
+                                        message: '新建成功',
+                                        type: 'success'
+                                    });
+                                    this.fileList = [];
+                                    this.form = {
+                                        demandId: '', // 需求
+                                        workCategoryId: '', // 所属工作大类
+                                        workTypeId: '', // 所属工作小类
+                                        workModelId: '',
+                                        workHours: '',
+                                        workDate: ''
+                                    };
+                                    this.$refs['ruleForm'].resetFields();
+                                    /*新建完之后返回列表*/
+                                    setTimeout(function () {
+                                        $.modal.closeTab();
+                                        window.location.href = '/note/worknote'
+                                    }, 1000)
+                                } else {
+                                    this.$message.error(res.data.msg);
+                                }
+                            });
+                            getList.catch(err => {
+                                console.log(err)
+                            });
+                            /*})*/
+                        }
+                    })
+                },
+                goBack() {
+                    //window.location.href = "javascript:history.go(-1)";
+                    if (this.params.from === 'main') {
+                        var realUrl = "/system/main";
+                        var noteUrl = "/system/main"
+                        $.modal.openTab('首页', noteUrl, realUrl);
+                        //window.location.href = "/system/main";
+                    } else {
+                        var realUrl = '/note/worknote';
+                        var noteUrl = "/note/worknote"
+                        $.modal.closeTab()
+                        $.modal.openTab('工作笔记', noteUrl, realUrl);
+                        window.location.href = "/note/worknote";
+                    }
+                },
+                clickInput() {
+                    $('#upload_input').click();
+                },
+                /*获取需求类型*/
+                getDemandType: function () {
+                    const getList = axios({
+                        method: 'post',
+                        url: "/note/getDemandTypeListRelevantMe",
+                    });
+                    getList.then(res => {
+                        if (res.data.code === 0) {
+                            this.DemandTypeOption = res.data.data;
+                        } else {
+                            this.DemandTypeOption = [];
+                        }
+                    });
+                    getList.catch(err => {
+                        console.log(err)
+                    });
+                },
+                /*根据需求类型获取所属类型*/
+                ownerDemandChange: function (val) {
+                    this.getOwnerDemandType(val)
+                },
+                /*获取所属类型*/
+                getOwnerDemandType: function (demandTypeId) {
+                    this.form.demandId = ''
+                    const formData = new FormData();
+                    if (demandTypeId) {
+                        formData.append('demandTypeId', demandTypeId)
+                    }
+                    const getList = axios({
+                        method: 'post',
+                        url: "/note/getDemandList",
+                        data: formData
+                    });
+                    getList.then(res => {
+                        if (res.data.code === 0) {
+                            this.ownerDemandOption = res.data.data;
+                        } else {
+                            this.ownerDemandOption = [];
+                        }
+                    });
+                    getList.catch(err => {
+                        console.log(err)
+                    });
+                },
+                /*获取工作大类*/
+                getworkCateList: function () {
+                    this.form.workCategoryId = ''
+                    const getList = axios({
+                        method: 'post',
+                        url: "/note/getWorkCategories",
+                    });
+                    getList.then(res => {
+                        if (res.data.code === 0) {
+                            this.workCateLists = res.data.data;
+                        } else {
+                            this.workCateLists = [];
+                        }
+                    });
+                    getList.catch(err => {
+                        console.log(err)
+                    });
+                },
+                /*根据工作大类查询工作小类*/
+                categoryChange: function (val) {
+                    this.form.workTypeId = '';
+                    const getList = axios({
+                        method: 'post',
+                        url: "/note/getWorkTypes/" + val,
+                    });
+                    getList.then(res => {
+                        if (res.status === 200) {
+                            this.workTypeList = res.data.data
+                        } else {
+                            this.workTypeList = [];
+                        }
+                    });
+                    getList.catch(err => {
+                        console.log(err)
+                    });
+                },
+                /*根据工作小类查询工作项*/
+                workTypeChange: function (val) {
+                    this.form.workModelId = ''
+                    const getList = axios({
+                        method: 'post',
+                        url: "/note/getWorkItems/" + val,
+                    });
+                    getList.then(res => {
+                        if (res.status === 200) {
+                            this.workModelList = res.data.data
+
+                        } else {
+                            this.workModelList = [];
+                        }
+                    });
+                    getList.catch(err => {
+                        console.log(err)
+                    });
+                },
+                /*获取url参数*/
+                getQueryVariable(variable) {
+                    var query = window.location.search.substring(1);
+                    var vars = query.split("&");
+                    /*vars=vars.toString().replace(/%20/g,"");  // 如果有 %20 则去除替换成 ''*/
+                    for (var i = 0; i < vars.length; i++) {
+                        var pair = vars[i].split("=");
+                        if (pair[0] == variable) {
+                            return pair[1];
+                        }
+                    }
+                },
+                /*获取url参数2*/
+                getParams() {
+                    this.params.flag = this.getQueryVariable("flag");
+                    this.params.noteId = this.getQueryVariable("noteId");
+                    this.params.demandId = this.getQueryVariable("demandId");
+                    this.params.demandTypeId = this.getQueryVariable("demandTypeId");
+                    this.params.from = this.getQueryVariable("from");
+                    console.log(this.params.flag + ':' + this.params.noteId);
+                    if (this.params.flag === 'see') {
+                        this.getFormData(this.params.noteId, 'see');
+                        this.disabled = true;
+                        this.content = '查看笔记'
+                    } else if (this.params.flag === 'edit') {
+                        this.getFormData(this.params.noteId);
+                        this.disabled = true;
+                        this.edit = false;
+                        this.content = '编辑笔记'
+                    } else {
+                        this.disabled = false;
+                        this.content = '新建笔记';
+                        // 需求新建带参数
+                        this.form.demandTypeId = this.params.demandTypeId;
+                        this.form.demandId = this.params.demandId;
+                    }
+                },
+                /*查看*/
+                getFormData(noteId, flag) {
+                    const formData = new FormData();
+                    formData.append('noteId', noteId)
+                    const getList = axios({
+                        method: 'post',
+                        url: "/note/detail",
+                        data: formData
+                    });
+                    getList.then(res => {
+                        this.$forceUpdate();
+                        if (res.data.code === 0) {
+                            console.log(res)
+                            /*放置所属工作小类*/
+                            this.categoryChange(res.data.data.workCategoryId)
+                            /*放置工作项*/
+                            this.workTypeChange(res.data.data.workTypeId)
+                            this.form = res.data.data;
+                            this.editor.txt.html(res.data.data.workText) // 编辑
+                            // 上传
+                            this.inputUpload.hasOutput = res.data.data.hasOutput
+                            this.inputUpload.outputUrl = res.data.data.outputUrl
+                            this.inputUpload.outputName = res.data.data.outputName
+                            if(res.data.data.outputName){
+                                let arr1 = res.data.data.outputName.split(',')
+                                // let arr2 = res.data.data.outputUrl.split(',')
+                                let arr = [];
+                                for (let i = 0; i < arr1.length; i++) {
+                                    arr.push({
+                                        "name": arr1[i],
+                                        "url": '',
+                                    })
+                                }
+                                this.oldFileList = arr
+                                //$('.filenames').text(res.data.data.outputName)
+                            }
+
+                            // 放置工作日期
+                            var date = [];
+                            date.push(res.data.data.workDate,res.data.data.workDateEnd)
+                            this.form.date = date
+
+                            if (flag === 'see') {
+                                this.editor.$textElem.attr('contenteditable', false); // 禁用编辑功能
+                            }
+                        } else {
+                            this.form = {}
+                            // 开启编辑功能
+                            this.editor.$textElem.attr('contenteditable', true)
+                        }
+                    });
+                    getList.catch(err => {
+                        console.log(err)
+                    });
+
+                },
+                /*文件上传 展示上传文件*/
+                uploadInput() {
+                    var e = e || window.event
+                    var _file = e.target.files
+                    var names = ""
+                    if (_file.length > 0) {
+                        for (let i = 0; i < _file.length; i++) {
+                            if (i == _file.length - 1) {
+                                names += _file[i].name
+                            } else {
+                                names += _file[i].name + " "
+                            }
+                        }
+                        //$("#filenames").html(names)
+                        this.inputUpload.outputName = names
+                    } else {
+                        this.inputUpload.outputName = ''
+                    }
+                },
+                // 上传接口
+                // submitUpload() {
+                // 	/*获取上传返回值*/
+                // 	var that = this;
+                // 	setTimeout(function() {
+                // 		$("#frm-reg").ajaxSubmit(function(res) {
+                // 			if (res.code === 0) {
+                // 				that.$message({
+                // 					message: res.msg,
+                // 					type: 'success'
+                // 				});
+                // 			} else {
+                // 				that.$message.error(res.msg);
+                // 			}
+                // 			if (res.data) {
+                // 				that.inputUpload.hasOutput = res.data.hasOutput
+                // 				that.inputUpload.outputUrl = res.data.outputUrl
+                // 				that.inputUpload.outputName = res.data.outputName
+                // 			}
+                // 		});
+                // 	}, 0)
+
+                // 	this.DemandTypeOption.forEach((tab, index) => {
+                // 		if (tab.TYPE_ID === this.form.demandTypeId) {
+                // 			this.inputData.demandType = tab.TYPE_NAME
+                // 		}
+                // 	})
+                // 	this.ownerDemandOption.forEach((tab, index) => {
+                // 		if (tab.DEMAND_ID === this.form.demandId) {
+                // 			this.inputData.demandContent = tab.DEMAND_CONTENT
+                // 		}
+                // 	})
+                // 	this.workCateLists.forEach((tab, index) => {
+                // 		if (tab.typeId === this.form.workCategoryId) {
+                // 			this.inputData.workCategory = tab.typeName
+                // 		}
+                // 	})
+                // 	this.workTypeList.forEach((tab, index) => {
+                // 		if (tab.typeId === this.form.workTypeId) {
+                // 			this.inputData.workType = tab.typeName
+                // 		}
+                // 	})
+                // 	this.workModelList.forEach((tab, index) => {
+                // 		if (tab.modelId === this.form.workModelId) {
+                // 			this.inputData.workItem = tab.workItem
+
+                // 		}
+                // 	})
+                // },
+                // 自定义去重
+                mySetFileter(arr) {
+                    let newArr = []
+                    let msgNumber = 0;
+                    for (var i = 0; i < arr.length; i++) {
+                        var item = arr[i]
+                        for (var j = i + 1; j < arr.length; j++) {
+                            if (item.name == arr[j].name) {
+                                msgNumber++
+                                if (msgNumber == 1) {
+                                    this.$message.error('添加的数据已存在');
+                                }
+                                arr.splice(j, 1)
+                                i--
+                            }
+                        }
+                    };
+                    newArr = arr
+                    return newArr
+                },
+                /*文件上传*/
+
+
+                // 上传文件 操作 
+
+                fileProgress(event, file, fileList) {
+                    let newList = this.mySetFileter(fileList)
+                    this.fileList = newList
+                },
+
+                handleRemove(file, fileList) {
+                    this.fileList = fileList
+                },
+
+                beforeRemove(file, fileList) {
+                    return this.$confirm(`确定移除 ${file.name}？`);
+                },
+                // 上传文件 操作  end
+
+
+            },
+            created: function () {
+                this.getOwnerDemandType();
+                this.getDemandType();
+                this.getworkCateList();
+                this.getParams();
+
+
+
+            }
+        })
+    </script>
+
+</body>
+
+</html>

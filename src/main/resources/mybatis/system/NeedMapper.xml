@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.need.mapper.NeedMapper">
+    <resultMap type="com.ruoyi.project.system.role.domain.Role" id="roleid">
+        <result property="roleId"   column="ROLE_ID"   />
+        <result property="roleName"   column="ROLE_NAME"   />
+    </resultMap>
+    <resultMap id="needpro" type="com.ruoyi.project.need.domain.Need" >
+
+        <result property="demandId"    column="demand_id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="userName"    column="USER_NAME"    />
+        <result property="roleId"   column="ROLE_ID"   />
+        <result property="roleName"   column="ROLE_NAME"   />
+        <result property="cqNum"    column="cq_num"    />
+        <result property="demandTypeId"    column="demand_type_id"    />
+        <result property="demandTypeName"    column="TYPE_NAME"    />
+        <result property="demandContent"    column="demand_content"    />
+        <result property="demandStatus"    column="demand_status"    />
+        <result property="demandDesc"    column="demand_desc"    />
+        <result property="expectWorkload"    column="expect_workload"    />
+        <result property="sourceType"    column="source_type"    />
+        <result property="sourceId"    column="SOURCE_ID"    />
+        <result property="sourceBy"    column="source_by"    />
+        <result property="demandTime"    column="demand_time"    />
+        <result property="onlineTime"    column="online_time"    />
+        <result property="createrId"    column="creater_id"    />
+        <result property="createrName"    column="creater_name"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="editStatus"    column="edit_status"    />
+        <result property="relevant"    column="relevant"    />
+        <result property="status"    column="STATUS"    />
+    </resultMap>
+    <resultMap type="com.ruoyi.project.need.domain.WorkLoad" id="WorkLoad">
+        <result property="modelId"    column="model_id"    />
+        <result property="modelType"    column="model_type"    />
+        <result property="modelCode"    column="model_code"    />
+        <result property="workType"    column="work_type"    />
+        <result property="roleId"    column="role_id"    />
+        <result property="workItem"    column="work_item"    />
+        <result property="workContent"    column="work_content"    />
+        <result property="workTimeType"    column="work_time_type"    />
+        <result property="workTime"    column="work_time"    />
+        <result property="workTimeUnit"    column="work_time_unit"    />
+        <result property="difficultFloor"    column="difficult_floor"    />
+        <result property="difficultCeiling"    column="difficult_ceiling"    />
+        <result property="createrId"    column="creater_id"    />
+        <result property="createrName"    column="creater_name"    />
+        <result property="createTime"    column="create_time"    />
+
+    </resultMap>
+
+    <sql id="selectWkDemandVo">
+		select demand_id,cq_num, demand_type_id, demand_content, demand_status, demand_desc, expect_workload, source_type, source_by,  demand_time, online_time, creater_id, creater_name, create_time,edit_status from wk_demand
+	</sql>
+
+    <sql id="selectWorkLoad">
+		select model_id, model_type, model_code, work_type, role_id, work_item, work_content, work_time_type, work_time, work_time_unit, difficult_floor, difficult_ceiling, creater_id, creater_name, create_time from wk_model
+	</sql>
+    <select id="selectRole" resultMap="roleid" parameterType="java.lang.Long">
+    select a.ROLE_ID,b.ROLE_NAME from SYS_USER_ROLE a,SYS_ROLE b  where a.ROLE_ID=b.ROLE_ID and a.USER_ID=#{userId} and b.STATUS=0
+
+    </select>
+    <select id="NeedMyList"  resultMap="needpro" parameterType="com.ruoyi.project.need.domain.Need">
+        select DISTINCT a.demand_id,a.cq_num, a.demand_type_id,c.TYPE_NAME, a.demand_content, a.demand_status, a.demand_desc, a.expect_workload, a.source_id, d.SOURCE_TYPE_NAME source_type, a.source_by, a.demand_time, a.online_time, a.creater_id, a.creater_name, a.create_time,a.edit_status from wk_demand a,WK_DEMAND_EMPLOYEE b,WK_TYPE c,WK_SOURCE_TYPE d
+        <where>
+            a.DEMAND_ID=b.DEMAND_ID AND a.DEMAND_TYPE_ID=c.TYPE_ID AND d.SOURCE_TYPE_ID=a.SOURCE_ID
+            <if test="cqNum != null  and cqNum != ''">and a.CQ_NUM  like concat(concat('%', #{cqNum,jdbcType=VARCHAR}), '%')</if>
+            <if test="demandTypeId != null  and demandTypeId != ''">and a.demand_type_id = #{demandTypeId,jdbcType=VARCHAR}</if>
+            <if test="demandContent != null  and demandContent != ''"> and a.demand_content like concat(concat('%', #{demandContent}), '%')</if>
+            <if test="demandStatus != null  and demandStatus != ''"> and a.demand_status = #{demandStatus,jdbcType=VARCHAR}</if>
+            <if test="createStartTime != null  and createStartTime != ''"> and a.CREATE_TIME &gt;= #{createStartTime,jdbcType=VARCHAR}</if>
+            <if test="createEndTime != null  and createEndTime != ''"> and a.CREATE_TIME &lt;=  #{createEndTime,jdbcType=VARCHAR}</if>
+            <if test="createrId != null  and createrId != ''"> and a.creater_id = #{createrId,jdbcType=VARCHAR}</if>
+            <if test="userId != null  and userId != ''"> and a.creater_id &lt;&gt; #{userId,jdbcType=VARCHAR}</if>
+            <if test="userId != null  and userId != ''"> and b.USER_ID=#{userId,jdbcType=VARCHAR}</if>
+            <if test="sourceBy != null  and sourceBy != ''"> and a.SOURCE_BY like concat(concat('%', #{sourceBy,jdbcType=VARCHAR}), '%')</if>
+        </where>
+        order by a.create_time desc
+    </select>
+    <select id="NeedMyLists"  resultMap="needpro" parameterType="java.lang.String">
+        SELECT
+        a.demand_id,
+        a.cq_num,
+        a.demand_type_id,
+        c.TYPE_NAME,
+        a.demand_content,
+        a.demand_status,
+        a.demand_desc,
+        a.expect_workload,
+        a.source_id,
+        b.SOURCE_TYPE_NAME source_type,
+        a.source_by,
+        a.demand_time,
+        a.online_time,
+        a.creater_id,
+        a.creater_name,
+        a.create_time,
+        a.edit_status
+        from wk_demand a,
+        WK_SOURCE_TYPE b,
+        WK_TYPE c
+        <where>
+            a.SOURCE_ID = b.SOURCE_TYPE_ID
+            AND a.DEMAND_TYPE_ID = c.TYPE_ID
+            AND a.STATUS=1
+            <if test="cqNum != null  and cqNum != ''">and a.CQ_NUM  like concat(concat('%', #{cqNum,jdbcType=VARCHAR}), '%')</if>
+            <if test="demandTypeId != null  and demandTypeId != ''">and a.demand_type_id = #{demandTypeId,jdbcType=VARCHAR}</if>
+            <if test="demandContent != null  and demandContent != ''"> and a.demand_content like concat(concat('%',#{demandContent,jdbcType=VARCHAR}),'%')</if>
+            <if test="demandStatus != null  and demandStatus != ''"> and a.demand_status = #{demandStatus,jdbcType=VARCHAR}</if>
+            <if test="createStartTime != null  and createStartTime != ''"> and a.CREATE_TIME &gt;= #{createStartTime,jdbcType=VARCHAR}</if>
+            <if test="createEndTime != null  and createEndTime != ''"> and a.CREATE_TIME &lt;=  #{createEndTime,jdbcType=VARCHAR}</if>
+            <if test="createrId != null  and createrId != ''"> and a.creater_id = #{createrId,jdbcType=VARCHAR}</if>
+            <if test="sourceBy != null  and sourceBy != ''"> and a.SOURCE_BY like concat(concat('%', #{sourceBy,jdbcType=VARCHAR}), '%')</if>
+        </where>
+        order by a.create_time desc
+    </select>
+    <select id="NeedType" resultType="com.ruoyi.project.need.domain.Need">
+        select TYPE_ID demandTypeId,TYPE_NAME demandTypeName from WK_TYPE
+        <where>
+            TYPE_LEVEL=1
+        </where>
+    </select>
+    <select id="needUsername" parameterType="java.lang.String" resultMap="needpro">
+     select USER_ID,USER_NAME from SYS_USER where USER_ID=#{userid}
+    </select>
+    <select id="NeedSources" resultType="com.ruoyi.project.need.domain.Need">
+        select SOURCE_TYPE_ID sourceId,SOURCE_TYPE_NAME sourceType from WK_SOURCE_TYPE
+    </select>
+
+    <select id="NeedOwner" resultMap="needpro">
+        SELECT
+        ROLE_ID,
+        ROLE_NAME,
+        USER_NAME,
+        USER_ID
+        FROM
+        (
+        select a.ROLE_ID,b.USER_ID,b.USER_NAME,c.ROLE_NAME from SYS_USER_ROLE a,SYS_USER b,SYS_ROLE c where a.ROLE_ID=c.ROLE_ID and a.USER_ID=b.USER_ID
+        )
+        where USER_ID &lt;&gt; 1
+        GROUP BY
+        ROLE_ID,
+        ROLE_NAME,
+        USER_NAME,
+        USER_ID
+        ORDER BY
+        ROLE_ID
+    </select>
+    <insert id="NeedAddList" parameterType="com.ruoyi.project.need.domain.Need">
+        <selectKey keyProperty="demandId" order="BEFORE" resultType="java.lang.String">
+            select seq_wk_demand.nextval as demandId from DUAL
+        </selectKey>
+        insert into WK_DEMAND(
+        <if test="demandId != null and demandId != ''">DEMAND_ID,</if>
+        <if test="cqNum != null and cqNum != ''">CQ_NUM,</if>
+        <if test="demandTypeId != null and demandTypeId != ''">DEMAND_TYPE_ID,</if>
+        <if test="demandContent != null and demandContent != ''">DEMAND_CONTENT,</if>
+        <if test="demandStatus != null and demandStatus != ''">DEMAND_STATUS,</if>
+        <if test="demandDesc != null and demandDesc != ''">DEMAND_DESC,</if>
+        <if test="expectWorkload != null and expectWorkload != ''">EXPECT_WORKLOAD,</if>
+        <if test="sourceId != null and sourceId != ''">SOURCE_ID,</if>
+        <if test="sourceBy != null and sourceBy != ''">SOURCE_BY,</if>
+        <if test="createTime != null and createTime != ''">CREATE_TIME,</if>
+        <if test="onlineTime != null and onlineTime != ''">ONLINE_TIME,</if>
+        <if test="createrId != null and createrId != ''">CREATER_ID,</if>
+        <if test="createrName != null and createrName != ''">CREATER_NAME,</if>
+        DEMAND_TIME,
+        EDIT_STATUS,
+        STATUS
+        )values(
+        <if test="demandId != null and demandId != ''">#{demandId,jdbcType=VARCHAR},</if>
+        <if test="cqNum != null and cqNum != ''">#{cqNum,jdbcType=VARCHAR},</if>
+        <if test="demandTypeId != null and demandTypeId != ''">#{demandTypeId,jdbcType=VARCHAR},</if>
+        <if test="demandContent != null and demandContent != ''">#{demandContent,jdbcType=VARCHAR},</if>
+        <if test="demandStatus != null and demandStatus != ''">#{demandStatus,jdbcType=VARCHAR},</if>
+        <if test="demandDesc != null and demandDesc != ''">#{demandDesc,jdbcType=VARCHAR},</if>
+        <if test="expectWorkload != null and expectWorkload != ''">#{expectWorkload,jdbcType=VARCHAR},</if>
+        <if test="sourceId != null and sourceId != ''">#{sourceId,jdbcType=VARCHAR},</if>
+        <if test="sourceBy != null and sourceBy != ''">#{sourceBy,jdbcType=VARCHAR},</if>
+        <if test="createTime != null and createTime != ''">#{createTime,jdbcType=VARCHAR},</if>
+        <if test="onlineTime != null and onlineTime != ''">#{onlineTime,jdbcType=VARCHAR},</if>
+        <if test="createrId != null and createrId != ''">#{createrId,jdbcType=VARCHAR},</if>
+        <if test="createrName != null and createrName != ''">#{createrName,jdbcType=VARCHAR},</if>
+        TO_CHAR(SYSDATE,'yyyymmddhh24miss'),
+        '0',
+        '1'
+        )
+    </insert>
+
+    <insert id="NeedAddUser" parameterType="com.ruoyi.project.need.domain.WkDemandEmployee" >
+
+        <selectKey keyProperty="unionId" resultType="java.lang.String" order="BEFORE">
+            SELECT seq_wk_demand_employee.NEXTVAL as unionId FROM DUAL
+        </selectKey>
+        insert into WK_DEMAND_EMPLOYEE(
+        <if test="unionId != null and unionId != 0">UNION_ID,</if>
+        <if test="demandId != null and demandId != 0">DEMAND_ID,</if>
+        <if test="userId != null and userId != ''">USER_ID,</if>
+        <if test="roleId != null and roleId != 0">ROLE_ID,</if>
+        <if test="relevant != null and relevant != ''">RELEVANT,</if>
+        <if test="createrId != null and createrId != 0">CREATER_ID,</if>
+        <if test="createrName != null and createrName != ''">CREATER_NAME,</if>
+        <if test="createTime != null and createTime != ''">CREATE_TIME</if>
+
+        )values(
+        <if test="unionId != null">#{unionId},</if>
+        <if test="demandId != null and demandId != 0">#{demandId,jdbcType=VARCHAR},</if>
+        <if test="userId != null and userId != 0">#{userId,jdbcType=VARCHAR},</if>
+        <if test="roleId != null and roleId != ''">#{roleId,jdbcType=VARCHAR},</if>
+        <if test="relevant != null and relevant != ''">#{relevant,jdbcType=VARCHAR},</if>
+        <if test="createrId != null and createrId != 0">#{createrId,jdbcType=VARCHAR},</if>
+        <if test="createrName != null and createrName != ''">#{createrName,jdbcType=VARCHAR},</if>
+        <if test="createTime != null and createTime != ''">#{createTime,jdbcType=VARCHAR}</if>
+        )
+    </insert>
+
+    <select id="selectModel" parameterType="java.lang.String" resultMap="WorkLoad">
+        <include refid="selectWorkLoad"/>
+        <where>
+            <if test="roleid != null  and roleid != ''"> and ROLE_ID = #{roleid,jdbcType=VARCHAR}</if>
+        </where>
+    </select>
+
+    <insert id="NeedAddWorkload" parameterType="com.ruoyi.project.need.domain.Work">
+
+        <selectKey keyProperty="workloadId" resultType="java.lang.String" order="BEFORE">
+            SELECT seq_wk_model.NEXTVAL as workloadId FROM DUAL
+        </selectKey>
+        insert into WK_WORKLOAD(
+        <if test="workloadId != null">WORKLOAD_ID,</if>
+        <if test="demandId != null and demandId != 0">DEMAND_ID,</if>
+        <if test="workCategoryId != null and workCategoryId != ''">WORK_CATEGORY_ID,</if>
+        <if test="workTypeId != null and workTypeId != ''">WORK_TYPE_ID,</if>
+        <if test="workModelId != null and workModelId != ''">WORK_MODEL_ID,</if>
+        <if test="createrId != null and createrId != ''">CREATER_ID,</if>
+        <if test="createrName != null and createrName != ''">CREATER_NAME,</if>
+        <if test="createTime != null and createTime != ''">CREATE_TIME,</if>
+        <if test="roleId != null and roleId != ''">ROLE_ID</if>
+        )values(
+        <if test="workloadId != null">#{workloadId,jdbcType=VARCHAR},</if>
+        <if test="demandId != null and demandId != ''">#{demandId,jdbcType=VARCHAR},</if>
+        <if test="workCategoryId != null and workCategoryId != ''">#{workCategoryId,jdbcType=VARCHAR},</if>
+        <if test="workTypeId != null and workTypeId != ''">#{workTypeId,jdbcType=VARCHAR},</if>
+        <if test="workModelId != null and workModelId != ''">#{workModelId,jdbcType=VARCHAR},</if>
+        <if test="createrId != null and createrId != ''">#{createrId,jdbcType=VARCHAR,</if>
+        <if test="createrName != null and createrName != ''">#{createrName,jdbcType=VARCHAR},</if>
+        <if test="createTime != null and createTime != ''">#{createTime,jdbcType=VARCHAR},</if>
+        <if test="roleId != null and roleId != ''">#{roleId,jdbcType=VARCHAR}</if>
+        )
+    </insert>
+
+    <update id="NeedUpdateList" parameterType="com.ruoyi.project.need.domain.Need">
+        update wk_demand
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="cqNum != null" >cq_num = #{cqNum,jdbcType=VARCHAR},</if>
+            <if test="demandTypeId != null">demand_type_id = #{demandTypeId,jdbcType=VARCHAR},</if>
+            <if test="demandContent != null">demand_content = #{demandContent,jdbcType=VARCHAR},</if>
+            <if test="demandStatus != null">demand_status = #{demandStatus,jdbcType=VARCHAR},</if>
+            <if test="demandDesc != null">demand_desc = #{demandDesc,jdbcType=VARCHAR},</if>
+            <if test="expectWorkload != null">expect_workload = #{expectWorkload,jdbcType=VARCHAR},</if>
+            <if test="sourceId != null">source_id = #{sourceId,jdbcType=VARCHAR},</if>
+            <if test="sourceBy != null">source_by = #{sourceBy,jdbcType=VARCHAR},</if>
+            <if test="onlineTime != null">online_time = #{onlineTime,jdbcType=VARCHAR},</if>
+            <if test="createTime != null">create_time = #{createTime,jdbcType=VARCHAR},</if>
+        </trim>
+        where DEMAND_ID = #{demandId,jdbcType=VARCHAR}
+    </update>
+
+    <update id="NeedUpdateUser" parameterType="com.ruoyi.project.need.domain.WkDemandEmployee">
+        update WK_DEMAND_EMPLOYEE
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="roleId != null">ROLE_ID = #{roleId,jdbcType=VARCHAR},</if>
+            <if test="userId != null">USER_ID = #{userId,jdbcType=VARCHAR},</if>
+            <if test="relevant != null and relevant != ''">RELEVANT=#{relevant,jdbcType=VARCHAR},</if>
+            <if test="createTime != null and createTime != ''">CREATE_TIME=#{createTime,jdbcType=VARCHAR}</if>
+        </trim>
+        where DEMAND_ID = #{demandId,jdbcType=VARCHAR}
+    </update>
+    <delete id="deleteNeedUser" parameterType="java.lang.String">
+    delete from WK_DEMAND_EMPLOYEE where DEMAND_ID=#{demandId,jdbcType=VARCHAR}
+
+   </delete>
+
+    <select id="needLook" parameterType="java.lang.String" resultMap="needpro">
+
+        <include refid="selectWkDemandVo"/>
+        <where>
+            DEMAND_ID=#{demandId,jdbcType=VARCHAR}
+        </where>
+
+    </select>
+
+    <select id="needCreator" resultMap="needpro">
+        select DISTINCT a.user_id,a.user_name from SYS_USER a,SYS_USER_ROLE b where a.user_id &lt;&gt; 1 and a.STATUS=0 and a.USER_ID=b.USER_ID and b.ROLE_ID in (100,101,120)
+    </select>
+
+    <select id="needContact" resultMap="needpro">
+        select user_id,user_name from sys_user where STATUS=0 and user_id &lt;&gt; 1 ORDER BY user_id
+    </select>
+
+    <select id="NeedMycreater" parameterType="com.ruoyi.project.need.domain.Need" resultMap="needpro">
+        select
+        demand_id,
+        cq_num,
+        demand_type_id,
+        TYPE_NAME,
+        demand_content,
+        demand_status,
+        demand_desc,
+        expect_workload,
+        source_id,
+        source_type,
+        source_by,
+        demand_time,
+        online_time,
+        creater_id,
+        creater_name,
+        create_time,
+        perSon,
+        relevant,
+        edit_status,
+        STATUS
+        from (SELECT
+        dd.demand_id,
+        dd.cq_num,
+        dd.demand_type_id,
+        ty.TYPE_NAME,
+        dd.demand_content,
+        dd.demand_status,
+        dd.demand_desc,
+        dd.expect_workload,
+        dd.source_id,
+        sty.SOURCE_TYPE_NAME source_type,
+        dd.source_by,
+        dd.demand_time,
+        dd.online_time,
+        dd.creater_id,
+        dd.creater_name,
+        dd.create_time,
+        dd.edit_status,
+        de.relevant,
+        de.USERID perSon,
+        dd.STATUS
+        FROM
+        WK_DEMAND dd
+        LEFT JOIN (
+        SELECT
+        wd.demand_id,
+        wd.relevant,
+        listagg ( wd.user_id, ',' ) within GROUP ( ORDER BY wd.user_id ) USERID
+        FROM
+        WK_DEMAND_EMPLOYEE wd
+        GROUP BY
+        demand_id,
+        wd.relevant
+        ) de ON de.DEMAND_ID = dd.DEMAND_ID
+        LEFT JOIN WK_TYPE ty ON ty.TYPE_ID = dd.DEMAND_TYPE_ID
+        LEFT JOIN WK_SOURCE_TYPE sty ON sty.SOURCE_TYPE_ID = dd.SOURCE_ID
+        <where>
+            <if test="createrId != null  and createrId != ''"> and dd.CREATER_ID =#{createrId}</if>
+            <if test="relevant != null  and relevant != ''"> or INSTR(de.relevant, #{relevant})>0</if>
+            <if test="people != null  and people != ''"> or INSTR(de.USERID, #{people})>0</if>
+        </where>
+        order by dd.create_time desc
+      )
+      <where>
+          STATUS=1
+          <if test="cqNum != null  and cqNum != ''">and CQ_NUM like concat(concat('%', #{cqNum,jdbcType=VARCHAR}), '%')</if>
+          <if test="demandTypeId != null  and demandTypeId != ''">and demand_type_id = #{demandTypeId,jdbcType=VARCHAR}</if>
+          <if test="demandContent != null  and demandContent != ''"> and demand_content like concat(concat('%', #{demandContent,jdbcType=VARCHAR}), '%')</if>
+          <if test="demandStatus != null  and demandStatus != ''"> and demand_status = #{demandStatus,jdbcType=VARCHAR}</if>
+          <if test="createStartTime != null  and createStartTime != ''"> and CREATE_TIME &gt;= #{createStartTime,jdbcType=VARCHAR}</if>
+          <if test="createEndTime != null  and createEndTime != ''"> and CREATE_TIME &lt;=  #{createEndTime,jdbcType=VARCHAR}</if>
+          <if test="relevant1 != null  and relevant1 != ''"> and INSTR(relevant, #{relevant1})>0</if>
+          <if test="people1 != null  and people1 != ''"> and INSTR(perSon, #{people1})>0</if>
+          <if test="sourceBy != null  and sourceBy != ''"> and SOURCE_BY like concat(concat('%', #{sourceBy,jdbcType=VARCHAR}), '%')</if>
+      </where>
+
+
+    </select>
+    <select id="Needothercreater" parameterType="com.ruoyi.project.need.domain.Need" resultMap="needpro">
+        select a.demand_id,a.cq_num, a.demand_type_id,c.TYPE_NAME, a.demand_content, a.demand_status, a.demand_desc, a.expect_workload, a.source_id, d.SOURCE_TYPE_NAME source_type, a.source_by, a.demand_time, a.online_time, a.creater_id, a.creater_name, a.create_time,a.edit_status from wk_demand a, WK_TYPE c,WK_SOURCE_TYPE d,WK_DEMAND_EMPLOYEE c
+        <where>
+            a.DEMAND_TYPE_ID=c.TYPE_ID AND d.SOURCE_TYPE_ID=a.SOURCE_ID AND a.demand_id=c.demand_id
+            <if test="cqNum != null  and cqNum != ''">and a.CQ_NUM  like concat(concat('%', #{cqNum,jdbcType=VARCHAR}), '%')</if>
+            <if test="demandTypeId != null  and demandTypeId != ''">and a.demand_type_id = #{demandTypeId,jdbcType=VARCHAR}</if>
+            <if test="demandContent != null  and demandContent != ''"> and a.demand_content like concat(concat('%', #{demandContent,jdbcType=VARCHAR}), '%')</if>
+            <if test="demandStatus != null  and demandStatus != ''"> and a.demand_status = #{demandStatus,jdbcType=VARCHAR}</if>
+            <if test="createStartTime != null  and createStartTime != ''"> and a.CREATE_TIME &gt;= #{createStartTime,jdbcType=VARCHAR}</if>
+            <if test="createEndTime != null  and createEndTime != ''"> and a.CREATE_TIME &lt;=  #{createEndTime,jdbcType=VARCHAR}</if>
+            <if test="createrId != null  and createrId != ''"> and a.creater_id = #{createrId,jdbcType=VARCHAR}</if>
+            <if test="sourceBy != null  and sourceBy != ''"> and a.SOURCE_BY like concat(concat('%', #{sourceBy,jdbcType=VARCHAR}), '%')</if>
+            <if test="userId != null  and userId != ''"> and c.USER_ID=#{userId,jdbcType=VARCHAR}</if>
+        </where>
+        order by a.create_time desc
+    </select>
+    <select id="NeedContactList" parameterType="com.ruoyi.project.need.domain.Need" resultMap="needpro">
+        select demand_id,
+        cq_num,
+        demand_type_id,
+        TYPE_NAME,
+        demand_content,
+        demand_status,
+        demand_desc,
+        expect_workload,
+        source_id,
+        source_type,
+        source_by,
+        demand_time,
+        online_time,
+        creater_id,
+        creater_name,
+        create_time,
+        edit_status  from (
+        select DISTINCT a.demand_id,
+        a.cq_num,
+        a.demand_type_id,
+        c.TYPE_NAME,
+        a.demand_content,
+        a.demand_status,
+        a.demand_desc,
+        a.expect_workload,
+        a.source_id,
+        d.SOURCE_TYPE_NAME source_type,
+        a.source_by,
+        a.demand_time,
+        a.online_time,
+        a.creater_id,
+        a.creater_name,
+        a.create_time,
+        a.edit_status,
+        regexp_substr(b.RELEVANT, '[^,]+', 1, level) RELEVANT
+        from wk_demand a,
+        WK_DEMAND_EMPLOYEE b,
+        WK_TYPE c,
+        WK_SOURCE_TYPE d  where a.DEMAND_ID = b.DEMAND_ID
+        AND a.DEMAND_TYPE_ID = c.TYPE_ID
+        AND d.SOURCE_TYPE_ID = a.SOURCE_ID
+        connect by level &lt;= regexp_count(RELEVANT, ',') + 1
+        and b.DEMAND_ID = prior b.DEMAND_ID
+        and prior dbms_random.value is not null )
+        <where>
+            <if test="cqNum != null  and cqNum != ''">and CQ_NUM like concat(concat('%', #{cqNum,jdbcType=VARCHAR}), '%')</if>
+            <if test="demandTypeId != null  and demandTypeId != ''">and demand_type_id = #{demandTypeId,jdbcType=VARCHAR}</if>
+            <if test="demandContent != null  and demandContent != ''"> and demand_content like concat(concat('%', #{demandContent,jdbcType=VARCHAR}), '%')</if>
+            <if test="demandStatus != null  and demandStatus != ''"> and demand_status = #{demandStatus,jdbcType=VARCHAR}</if>
+            <if test="createStartTime != null  and createStartTime != ''"> and CREATE_TIME &gt;= #{createStartTime,jdbcType=VARCHAR}</if>
+            <if test="createEndTime != null  and createEndTime != ''"> and CREATE_TIME &lt;=  #{createEndTime,jdbcType=VARCHAR}</if>
+            <if test="createrId != null  and createrId != ''"> and creater_id = #{createrId,jdbcType=VARCHAR}</if>
+            <if test="userId != null  and userId != ''"> and creater_id &lt;&gt; #{userId,jdbcType=VARCHAR}</if>
+            <if test="userId != null  and userId != ''"> and RELEVANT = #{userId,jdbcType=VARCHAR}</if>
+            <if test="sourceBy != null  and sourceBy != ''"> and source_type like concat(concat('%', #{sourceBy,jdbcType=VARCHAR}), '%')</if>
+
+
+        </where>
+
+    </select>
+
+    <select id="needShowXg" parameterType="java.lang.String" resultType="java.lang.String">
+        select DISTINCT RELEVANT  from WK_DEMAND_EMPLOYEE where DEMAND_ID=#{demandId,jdbcType=VARCHAR}
+    </select>
+    <select id="needShowPepole" resultType="java.lang.String" resultMap="needpro">
+      select b.ROLE_ID,b.USER_ID,c.ROLE_NAME,d.USER_NAME from WK_DEMAND a, WK_DEMAND_EMPLOYEE b,SYS_ROLE c,SYS_USER d where  a.DEMAND_ID=b.DEMAND_ID and b.ROLE_ID=c.ROLE_ID and d.USER_ID=b.USER_ID and a.DEMAND_ID=#{demandId,jdbcType=VARCHAR} GROUP BY b.ROLE_ID,b.USER_ID,c.ROLE_NAME,d.USER_NAME ORDER BY ROLE_ID
+    </select>
+
+    <select id="needShowUpdate" resultType="java.lang.String" resultMap="needpro">
+        select b.TYPE_NAME,a.DEMAND_ID,a.DEMAND_TYPE_ID,a.CQ_NUM,a.DEMAND_CONTENT,a.CREATE_TIME,a.SOURCE_ID,c.SOURCE_TYPE_NAME,a.SOURCE_BY,a.DEMAND_STATUS,a.DEMAND_DESC,a.EXPECT_WORKLOAD,a.ONLINE_TIME  from WK_DEMAND a,WK_TYPE b,WK_SOURCE_TYPE c where a.DEMAND_TYPE_ID=b.TYPE_ID and a.SOURCE_ID=c.SOURCE_TYPE_ID and a.DEMAND_ID=#{demandId,jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectWorkModel" parameterType="com.ruoyi.project.need.domain.Work">
+
+		select workload_id, demand_id, work_category_id, work_type_id, work_model_id, work_content, difficult_degree, work_num, work_time, creater_id, creater_name, create_time,role_id from wk_workload where role_id=#{roleId,jdbcType=VARCHAR} and demand_id=#{demandId,jdbcType=VARCHAR}
+    </select>
+
+    <resultMap type="com.ruoyi.project.need.domain.Export" id="export">
+        <result property="cqNum"    column="cqNum" />
+        <result property="demandType"    column="demandType" />
+        <result property="demandContent"    column="demandContent"  />
+        <result property="demandStatus"    column="demandStatus"  />
+        <result property="sourceType"    column="sourceType" />
+        <result property="createTime"    column="createTime" />
+        <result property="createrName"    column="createrName" />
+        <result property="expectWorkload"    column="expectWorkload"  />
+        <result property="sourceName"    column="sourceName"  />
+    </resultMap>
+
+    <select id="selectNeedList" parameterType="com.ruoyi.project.need.domain.Need" resultMap="export">
+        SELECT
+        DISTINCT
+        a.cq_num cqNum,
+        c.TYPE_NAME demandType,
+        a.demand_content demandContent,
+        a.demand_status demandStatus,
+        a.expect_workload expectWorkload,
+        b.SOURCE_TYPE_NAME sourceType,
+        a.SOURCE_BY sourceBy,
+        a.creater_name createrName,
+        a.create_time createTime,
+        a.ONLINE_TIME  onlineTime
+        FROM
+        wk_demand a,
+        WK_SOURCE_TYPE b,
+        WK_TYPE c
+        <where>
+            a.DEMAND_TYPE_ID = b.SOURCE_TYPE_ID
+            AND a.DEMAND_TYPE_ID = c.TYPE_ID
+            <if test="cqNum != null  and cqNum != ''">and a.CQ_NUM like concat(concat('%', #{cqNum,jdbcType=VARCHAR}), '%')</if>
+            <if test="demandTypeId != null  and demandTypeId != ''">and a.demand_type_id = #{demandTypeId,jdbcType=VARCHAR}</if>
+            <if test="demandContent != null  and demandContent != ''"> and a.demand_content like concat(concat('%', #{demandContent,jdbcType=VARCHAR}), '%')</if>
+            <if test="demandStatus != null  and demandStatus != ''"> and a.demand_status = #{demandStatus,jdbcType=VARCHAR}</if>
+            <if test="createStartTime != null  and createStartTime != ''"> and a.CREATE_TIME &gt;= #{createStartTime,jdbcType=VARCHAR}</if>
+            <if test="createEndTime != null  and createEndTime != ''"> and a.CREATE_TIME &lt;=  #{createEndTime,jdbcType=VARCHAR}</if>
+            <if test="createrId != null  and createrId != ''"> and a.creater_id = #{createrId,jdbcType=VARCHAR}</if>
+
+        </where>
+    </select>
+    <select id="selectNeed" resultType="java.util.HashMap" parameterType="java.lang.String">
+        select a.DEMAND_CONTENT,b.TYPE_NAME from WK_DEMAND a,WK_TYPE b where a.DEMAND_TYPE_ID=b.TYPE_ID and a.DEMAND_ID=#{demandid,jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectBtypename"  parameterType="java.lang.String" resultType="java.lang.String">
+         select b.TYPE_NAME from WK_MODEL a,WK_TYPE b where a.MODEL_ID=#{modelid,jdbcType=VARCHAR} and a.MODEL_TYPE=b.TYPE_ID
+    </select>
+    <select id="selectStypename" parameterType="java.lang.String"  resultType="java.util.HashMap">
+         SELECT b.TYPE_NAME,a.WORK_ITEM from WK_MODEL a,WK_TYPE b where a.MODEL_ID=#{modelid,jdbcType=VARCHAR} and a.WORK_TYPE=b.TYPE_ID
+    </select>
+
+    <select id="listSeach"  resultMap="needpro" parameterType="java.lang.String">
+        SELECT
+        a.demand_id,
+        a.cq_num,
+        a.demand_type_id,
+        a.demand_content,
+        a.demand_status,
+        a.demand_desc,
+        a.expect_workload,
+        a.source_id,
+        a.source_by,
+        a.demand_time,
+        a.online_time,
+        a.creater_id,
+        a.creater_name,
+        a.create_time,
+        a.edit_status
+        from wk_demand a
+
+        <where>
+            <if test="demanid != null  and demanid != ''">a.demand_id = #{demanid,jdbcType=VARCHAR}</if>
+
+        </where>
+    </select>
+
+    <select id="selectBj" parameterType="java.lang.String" resultType="java.lang.Integer" >
+        select count(*) from WK_NOTE where DEMAND_ID=#{demandId}
+    </select>
+
+    <update id="deleteBj" parameterType="java.lang.String" >
+        update WK_DEMAND set STATUS=0 where DEMAND_ID=#{demandId}
+    </update>
+
+
+
+</mapper>

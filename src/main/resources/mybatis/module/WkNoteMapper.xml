@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.module.note.mapper.WkNoteMapper">
+
+    <resultMap type="com.ruoyi.project.module.note.domain.WorkNote" id="workNote">
+        <result property="noteId" column="note_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="demandId" column="demand_id"/>
+        <result property="cqNum" column="cq_num"/>
+        <result property="demandType" column="demand_type"/>
+        <result property="demandContent" column="demand_content"/>
+        <result property="workCategory" column="work_category"/>
+        <result property="workType" column="work_type"/>
+        <result property="workItem" column="work_item"/>
+        <result property="workHours" column="work_hours"/>
+        <result property="workDate" column="work_date"/>
+        <result property="workDateEnd" column="work_date_end"/>
+        <result property="workDesc" column="work_desc"/>
+        <result property="workText" column="work_text"/>
+        <result property="hasOutput" column="has_output"/>
+        <result property="outputName" column="output_name"/>
+        <result property="outputUrl" column="output_url"/>
+    </resultMap>
+
+    <resultMap type="com.ruoyi.project.module.note.domain.WkNote" id="wkNote">
+        <result property="noteId" column="note_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="demandTypeId" column="demand_type_id"/>
+        <result property="demandId" column="demand_id"/>
+        <result property="workCategoryId" column="work_category_id"/>
+        <result property="workTypeId" column="work_type_id"/>
+        <result property="workModelId" column="work_model_id"/>
+        <result property="workHours" column="work_hours"/>
+        <result property="workDesc" column="work_desc"/>
+        <result property="workText" column="work_text"/>
+        <result property="workDate" column="work_date"/>
+        <result property="workDateEnd" column="work_date_end"/>
+        <result property="hasOutput" column="has_output"/>
+        <result property="outputUrl" column="output_url"/>
+        <result property="outputName" column="output_name"/>
+    </resultMap>
+
+    <resultMap type="com.ruoyi.project.module.workload.domain.WkWorkload" id="workload">
+        <result property="workloadId" column="workload_id"/>
+        <result property="noteId" column="note_id"/>
+        <result property="demandId" column="demand_id"/>
+        <result property="workCategoryId" column="work_category_id"/>
+        <result property="workTypeId" column="work_type_id"/>
+        <result property="workModelId" column="work_model_id"/>
+        <result property="workContent" column="work_content"/>
+        <result property="difficultDegree" column="difficult_degree"/>
+        <result property="workNum" column="work_num"/>
+        <result property="workTime" column="work_time"/>
+        <result property="hasOutput" column="has_output"/>
+        <result property="outputUrl" column="output_url"/>
+        <result property="outputName" column="output_name"/>
+        <result property="createrId" column="creater_id"/>
+        <result property="createrName" column="creater_name"/>
+        <result property="createTime" column="create_time"/>
+        <result property="param1" column="param1"/>
+        <result property="param2" column="param2"/>
+    </resultMap>
+
+    <resultMap type="com.ruoyi.project.module.type.domain.WkType" id="workType">
+        <result property="typeId" column="type_id"/>
+        <result property="typeName" column="type_name"/>
+    </resultMap>
+
+    <resultMap type="com.ruoyi.project.module.model.domain.WkModel" id="workModel">
+        <result property="modelId" column="model_id"/>
+        <result property="workItem" column="work_item"/>
+    </resultMap>
+
+    <select id="selectWorkNotes" parameterType="com.ruoyi.project.module.note.domain.WorkNote" resultMap="workNote">
+        SELECT
+        N.NOTE_ID,
+        N.USER_ID,
+        D.CQ_NUM,
+        T1.TYPE_NAME DEMAND_TYPE,
+        D.DEMAND_CONTENT,
+        T2.TYPE_NAME WORK_CATEGORY,
+        T3.TYPE_NAME WORK_TYPE,
+        M.WORK_ITEM,
+        N.WORK_HOURS,
+        N.OUTPUT_NAME,
+        TO_CHAR(TO_DATE(SUBSTR(N.WORK_DATE, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd') WORK_DATE,
+        TO_CHAR(TO_DATE(SUBSTR(N.WORK_DATE_END, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd') WORK_DATE_END
+        FROM WK_NOTE N
+        LEFT JOIN WK_DEMAND D ON N.DEMAND_ID = D.DEMAND_ID
+        LEFT JOIN WK_MODEL M ON N.WORK_MODEL_ID = M.MODEL_ID
+        LEFT JOIN WK_TYPE T1 ON D.DEMAND_TYPE_ID = T1.TYPE_ID
+        LEFT JOIN WK_TYPE T2 ON N.WORK_CATEGORY_ID = T2.TYPE_ID
+        LEFT JOIN WK_TYPE T3 ON N.WORK_TYPE_ID = T3.TYPE_ID
+        WHERE 1 = 1
+        <if test="userId != null  and userId != ''">and n.user_id = #{userId}</if>
+        <if test="cqNum != null  and cqNum != ''">and d.cq_num like '%' || #{cqNum} || '%'</if>
+        <if test="demandTypeId != null  and demandTypeId != ''">and t1.type_id = #{demandTypeId}</if>
+        <if test="demandId != null  and demandId != ''">and n.demand_id = #{demandId}</if>
+        <if test="demandContent != null  and demandContent != ''">and d.demand_content like '%' || #{demandContent} || '%'</if>
+        <if test="startTime != null and startTime != '' and endTime != null and endTime != ''">
+            and #{startTime} &lt;= n.work_date and #{endTime} &gt;= n.work_date_end
+        </if>
+        ORDER BY N.WORK_DATE DESC
+    </select>
+
+    <select id="selectWorkNoteById" parameterType="java.lang.String" resultMap="workNote">
+		SELECT
+		N.NOTE_ID,
+		N.USER_ID,
+		T1.TYPE_NAME DEMAND_TYPE,
+		D.DEMAND_CONTENT,
+		T2.TYPE_NAME WORK_CATEGORY,
+		T3.TYPE_NAME WORK_TYPE,
+		M.WORK_ITEM,
+		N.WORK_HOURS,
+		N.WORK_TEXT,
+		N.HAS_OUTPUT,
+		N.OUTPUT_URL,
+		N.OUTPUT_NAME,
+		TO_CHAR(TO_DATE(SUBSTR(N.WORK_DATE, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd') WORK_DATE,
+		TO_CHAR(TO_DATE(SUBSTR(N.WORK_DATE_END, 1, 8), 'yyyyMMdd'), 'yyyy-MM-dd') WORK_DATE_END
+		FROM WK_NOTE N
+		LEFT JOIN WK_DEMAND D ON N.DEMAND_ID = D.DEMAND_ID
+		LEFT JOIN WK_MODEL M ON N.WORK_MODEL_ID = M.MODEL_ID
+		LEFT JOIN WK_TYPE T1 ON D.DEMAND_TYPE_ID = T1.TYPE_ID
+		LEFT JOIN WK_TYPE T2 ON N.WORK_CATEGORY_ID = T2.TYPE_ID
+		LEFT JOIN WK_TYPE T3 ON N.WORK_TYPE_ID = T3.TYPE_ID
+		WHERE NOTE_ID = #{noteId}
+	</select>
+
+    <select id="selectDemandTypeList" resultType="map">
+		SELECT T.TYPE_ID, T.TYPE_NAME
+		FROM WK_TYPE T
+		WHERE T.TYPE_LEVEL = '1'
+		ORDER BY TO_NUMBER(T.SORT)
+	</select>
+
+    <select id="selectDemandList" resultType="map">
+        SELECT DISTINCT D.DEMAND_ID, D.DEMAND_CONTENT FROM WK_DEMAND D
+        LEFT JOIN WK_DEMAND_EMPLOYEE E ON D.DEMAND_ID = E.DEMAND_ID
+        WHERE 1 = 1
+        <if test="demandTypeId != null and demandTypeId != ''">
+            AND D.DEMAND_TYPE_ID = #{demandTypeId}
+        </if>
+        <if test="userId != null and userId != ''">
+            AND (E.USER_ID = #{userId} OR INSTR(E.RELEVANT, #{userId}) > 0 OR E.CREATER_ID = #{userId})
+        </if>
+    </select>
+
+    <select id="selectWorkCategories" resultMap="workType">
+		SELECT T.TYPE_ID, T.TYPE_NAME
+		FROM WK_TYPE T
+		WHERE T.TYPE_LEVEL = '2'
+		AND INSTR(T.ROLE_ID, #{roleId}) > 0
+		ORDER BY TO_NUMBER(T.SORT)
+	</select>
+
+    <select id="selectWorkTypes" resultMap="workType">
+		SELECT T.TYPE_ID, T.TYPE_NAME
+		FROM WK_TYPE T
+		WHERE T.TYPE_LEVEL = '3'
+		AND T.SEC_LEVEL = #{secLevel}
+		AND INSTR(T.ROLE_ID, #{roleId}) > 0
+		ORDER BY TO_NUMBER(T.SORT)
+	</select>
+
+    <select id="selectWorkItems" resultMap="workModel">
+		SELECT M.MODEL_ID, M.WORK_ITEM
+		FROM WK_MODEL M
+		WHERE INSTR(M.WORK_TYPE, #{workTypeId}) > 0
+		AND INSTR(M.ROLE_ID, #{roleId}) > 0
+		AND STATUS = '1'
+		ORDER BY TO_NUMBER(SUBSTR(M.MODEL_CODE, INSTR(M.MODEL_CODE, '-') + 1))
+	</select>
+
+    <select id="selectWorkload" resultMap="workload">
+		SELECT *
+		FROM WK_WORKLOAD W
+		WHERE SUBSTR(W.WORK_DATE, 1, 6) = #{workDate}
+		AND DEMAND_ID = #{demandId}
+		AND WORK_MODEL_ID = #{modelId}
+	</select>
+
+    <select id="selectWorkloadByNoteId" resultMap="workload">
+		SELECT * FROM WK_WORKLOAD
+		WHERE NOTE_ID = #{noteId}
+		OR NOTE_ID LIKE #{noteId} || ',%'
+		OR NOTE_ID LIKE '%,' || #{noteId}
+		OR NOTE_ID LIKE '%,' || #{noteId} || ',%'
+	</select>
+
+    <insert id="insertWorkload">
+        <selectKey keyProperty="workloadId" resultType="java.lang.String" order="BEFORE">
+            SELECT seq_wk_workload.NEXTVAL as workloadId FROM DUAL
+        </selectKey>
+        insert into wk_workload
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="workloadId != null">workload_id,</if>
+            <if test="noteId != null">note_id,</if>
+            <if test="demandId != null">demand_id,</if>
+            <if test="workCategoryId != null">work_category_id,</if>
+            <if test="workTypeId != null">work_type_id,</if>
+            <if test="workModelId != null">work_model_id,</if>
+            <if test="workContent != null">work_content,</if>
+            <if test="difficultDegree != null">difficult_degree,</if>
+            <if test="workNum != null">work_num,</if>
+            <if test="workTime != null">work_time,</if>
+            <if test="workDate != null">work_date,</if>
+            <if test="hasOutput != null">has_output,</if>
+            <if test="outputUrl != null">output_url,</if>
+            <if test="outputName != null">output_name,</if>
+            <if test="createrId != null">creater_id,</if>
+            <if test="createrName != null">creater_name,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="param1 != null">param1,</if>
+            <if test="param2 != null">param2,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="workloadId != null">#{workloadId},</if>
+            <if test="noteId != null">#{noteId},</if>
+            <if test="demandId != null">#{demandId},</if>
+            <if test="workCategoryId != null">#{workCategoryId},</if>
+            <if test="workTypeId != null">#{workTypeId},</if>
+            <if test="workModelId != null">#{workModelId},</if>
+            <if test="workContent != null">#{workContent},</if>
+            <if test="difficultDegree != null">#{difficultDegree},</if>
+            <if test="workNum != null">#{workNum},</if>
+            <if test="workTime != null">#{workTime},</if>
+            <if test="workDate != null">#{workDate},</if>
+            <if test="hasOutput != null">#{hasOutput},</if>
+            <if test="outputUrl != null">#{outputUrl},</if>
+            <if test="outputName != null">#{outputName},</if>
+            <if test="createrId != null">#{createrId},</if>
+            <if test="createrName != null">#{createrName},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="param1 != null">#{param1},</if>
+            <if test="param2 != null">#{param2},</if>
+        </trim>
+    </insert>
+
+    <update id="updateWorkload" parameterType="com.ruoyi.project.module.workload.domain.WkWorkload">
+        update wk_workload
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="noteId != null">note_id = #{noteId},</if>
+            <if test="demandId != null">demand_id = #{demandId},</if>
+            <if test="workCategoryId != null">work_category_id = #{workCategoryId},</if>
+            <if test="workTypeId != null">work_type_id = #{workTypeId},</if>
+            <if test="workModelId != null">work_model_id = #{workModelId},</if>
+            <if test="workContent != null">work_content = #{workContent},</if>
+            <if test="difficultDegree != null">difficult_degree = #{difficultDegree},</if>
+            <if test="workNum != null">work_num = #{workNum},</if>
+            <if test="workTime != null">work_time = #{workTime},</if>
+            <if test="hasOutput != null">has_output = #{hasOutput},</if>
+            <if test="outputUrl != null">output_url = #{outputUrl},</if>
+            <if test="outputName != null">output_name = #{outputName},</if>
+            <if test="createrId != null">creater_id = #{createrId},</if>
+            <if test="createrName != null">creater_name = #{createrName},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="param1 != null">param1 = #{param1},</if>
+            <if test="param2 != null">param2 = #{param2},</if>
+        </trim>
+        where workload_id = #{workloadId}
+    </update>
+
+    <delete id="deleteWorkload">
+        DELETE FROM WK_WORKLOAD W WHERE W.WORKLOAD_ID = #{workloadId}
+    </delete>
+
+    <select id="selectWkNoteById" parameterType="string" resultMap="wkNote">
+		SELECT
+		D.DEMAND_TYPE_ID,
+		N.DEMAND_ID,
+		N.WORK_CATEGORY_ID,
+		N.WORK_TYPE_ID,
+		N.WORK_MODEL_ID,
+		N.WORK_HOURS,
+		TO_CHAR(TO_DATE(N.WORK_DATE, 'yyyyMMdd'), 'yyyy-MM-dd') WORK_DATE,
+		TO_CHAR(TO_DATE(N.WORK_DATE_END, 'yyyyMMdd'), 'yyyy-MM-dd') WORK_DATE_END,
+		N.WORK_TEXT,
+		N.HAS_OUTPUT,
+		N.OUTPUT_URL,
+		N.OUTPUT_NAME
+		FROM WK_NOTE N
+		LEFT JOIN WK_DEMAND D ON N.DEMAND_ID = D.DEMAND_ID
+		WHERE N.NOTE_ID = #{noteId}
+	</select>
+
+    <insert id="insertWkNote" parameterType="com.ruoyi.project.module.note.domain.WkNote">
+        <selectKey keyProperty="noteId" resultType="java.lang.String" order="BEFORE">
+            SELECT seq_wk_note.NEXTVAL as noteId FROM DUAL
+        </selectKey>
+        insert into wk_note
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="noteId != null">note_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="demandId != null">demand_id,</if>
+            <if test="workCategoryId != null">work_category_id,</if>
+            <if test="workTypeId != null">work_type_id,</if>
+            <if test="workModelId != null">work_model_id,</if>
+            <if test="workHours != null">work_hours,</if>
+            <if test="workDesc != null">work_desc,</if>
+            <if test="workText != null">work_text,</if>
+            <if test="workDate != null">work_date,</if>
+            <if test="workDateEnd != null">work_date_end,</if>
+            <if test="hasOutput != null">has_output,</if>
+            <if test="outputName != null">output_name,</if>
+            <if test="outputUrl != null">output_url,</if>
+            <if test="createrId != null">creater_id,</if>
+            <if test="createrName != null">creater_name,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="param1 != null">param1,</if>
+            <if test="param2 != null">param2,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="noteId != null">#{noteId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="demandId != null">#{demandId},</if>
+            <if test="workCategoryId != null">#{workCategoryId},</if>
+            <if test="workTypeId != null">#{workTypeId},</if>
+            <if test="workModelId != null">#{workModelId},</if>
+            <if test="workHours != null">#{workHours},</if>
+            <if test="workDesc != null">#{workDesc},</if>
+            <if test="workText != null">#{workText},</if>
+            <if test="workDate != null">#{workDate},</if>
+            <if test="workDateEnd != null">#{workDateEnd},</if>
+            <if test="hasOutput != null">#{hasOutput},</if>
+            <if test="outputName != null">#{outputName},</if>
+            <if test="outputUrl != null">#{outputUrl},</if>
+            <if test="createrId != null">#{createrId},</if>
+            <if test="createrName != null">#{createrName},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="param1 != null">#{param1},</if>
+            <if test="param2 != null">#{param2},</if>
+        </trim>
+    </insert>
+
+    <update id="updateWkNote" parameterType="com.ruoyi.project.module.note.domain.WkNote">
+        update wk_note
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="demandId != null">demand_id = #{demandId},</if>
+            <if test="workCategoryId != null">work_category_id = #{workCategoryId},</if>
+            <if test="workTypeId != null">work_type_id = #{workTypeId},</if>
+            <if test="workModelId != null">work_model_id = #{workModelId},</if>
+            <if test="workHours != null">work_hours = #{workHours},</if>
+            <if test="workDesc != null">work_desc = #{workDesc},</if>
+            <if test="workText != null">work_text = #{workText},</if>
+            <if test="workDate != null">work_date = #{workDate},</if>
+            <if test="workDateEnd != null">work_date_end = #{workDateEnd},</if>
+            <if test="hasOutput != null">has_output = #{hasOutput},</if>
+            <if test="outputName != null">output_name = #{outputName},</if>
+            <if test="outputUrl != null">output_url = #{outputUrl},</if>
+            <if test="createrId != null">creater_id = #{createrId},</if>
+            <if test="createrName != null">creater_name = #{createrName},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="param1 != null">param1 = #{param1},</if>
+            <if test="param2 != null">param2 = #{param2},</if>
+        </trim>
+        where note_id = #{noteId}
+    </update>
+
+    <delete id="deleteWkNoteById">
+		DELETE FROM WK_NOTE T WHERE T.NOTE_ID = #{noteId}
+	</delete>
+
+</mapper>

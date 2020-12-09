@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<!--360浏览器优先以webkit内核解析-->
+		<title>工作量</title>
+		<link rel="shortcut icon" href="favicon.ico">
+		<link href="../../static/css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}" rel="stylesheet" />
+		<link href="../../static/css/font-awesome.min.css" th:href="@{/css/font-awesome.min.css}" rel="stylesheet" />
+		<link href="../../static/css/main/animate.min.css" th:href="@{/css/main/animate.min.css}" rel="stylesheet" />
+		<link href="../../static/css/main/style.min862f.css" th:href="@{/css/main/style.min862f.css}" rel="stylesheet" />
+		<link href="../../static/css/elementUI.css" th:href="@{/css/elementUI.css}" rel="stylesheet" />
+		<!--<link href="../../static/css/newCss/main.css" th:href="@{/css/newCss/main.css}" rel="stylesheet" />-->
+	</head>
+	<style>
+		body {
+			padding: 30px;
+			box-sizing: border-box;
+			position: relative;
+			padding-top: 10px;
+			padding-left: 25px;
+			padding-right: 25px;
+		}
+		.tb-edit .input-box {
+			display: none
+		}
+		.tb-edit .button-box{
+			display: none;
+			border-radius: 4px;
+			background: #85ce61;
+			color: #FFF;
+			padding: 2px 8px;
+			border: 0;
+			font-size: 12px;
+			margin-top: 2px;
+		}
+		.el-pagination{
+			margin-top: 20px;
+		}
+		.el-table .cell {
+			white-space: nowrap;
+			color: #515a6e;
+		}
+		.table-container .el-table th.is-leaf, .table-container .el-table td {
+			border-width: 0.5px;
+		}
+		body .el-table th.gutter{
+			display: table-cell!important;
+		}
+		.el-input{
+			width: 238px;
+			height: 40px;
+		}
+		.el-pagination{
+			text-align: center;
+			padding: 20px 0 0;
+		}
+		.el-form-item{
+			font-size: 24px;
+			color: #515a6e;
+		}
+		.el-form-item {
+			margin-bottom: 12px;
+		}
+
+		.search{
+			background: #0086e5;
+		}
+		.daochu{
+			background: #00b227;
+		}
+		.el-tabs__item{
+			font-size: 16px;
+		}
+		.el-input--mini .el-input__icon{
+			position: relative;
+			top: -8px;
+		}
+		.el-button--mini, .el-button--small {
+			font-size: 14px;
+		}
+		#app-gray{
+			padding-top: 15px;
+			padding-left: 30px;
+		}
+		.dashboard-header{
+			padding-top: 10px;
+		}
+		.el-form-item__content .el-input__inner{
+			width: 238px;
+		}
+		.el-tabs__content{
+			padding-top: 4px;
+		}
+	</style>
+
+	<body class="gray-bg">
+		<div id="app-jobs" class="row  border-bottom white-bg dashboard-header">
+			<!-- 切换选项 -->
+			<el-tabs v-model="activeName" @tab-click="handleClick">
+				<el-tab-pane label="我的工作清单" name="first">
+					<div>
+						<el-form label-width="80px" :model="formLabelAlign" :inline="true">
+							<!--<el-row :gutter="18">
+								<el-col :span="6">-->
+							<el-form-item label="需求类型">
+								<el-select v-model="formLabelAlign.demandTypeId" placeholder="选择需求类型" clearable filterable>
+									<el-option v-for="item in DemandTypeOtion" :key="item.typeId" :label="item.typeName" :value="item.typeId">
+									</el-option>
+								</el-select>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="附件">
+								<el-select v-model="formLabelAlign.hasOutput" clearable>
+									<el-option label="有" value="1"></el-option>
+									<el-option label="无" value="0"></el-option>
+								</el-select>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="CQ单号">
+								<el-input v-model="formLabelAlign.cqCode" maxlength="15" show-word-limit></el-input>
+							</el-form-item>
+							<!--</el-col>
+							</el-row>
+							<el-row>
+								<el-col :span="6">-->
+							<el-form-item label="工作日期">
+								<el-date-picker v-model="formLabelAlign.workDate" type="month" placeholder="选择月" value-format="yyyyMM">
+								</el-date-picker>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="需求内容">
+								<el-input v-model="formLabelAlign.demandContent" maxlength="50" show-word-limit></el-input>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="提出人">
+								<el-input v-model="formLabelAlign.sourceBy"></el-input>
+							</el-form-item>
+							<!--</el-col>
+							</el-row>
+							<el-row>
+								<el-col :span="6">-->
+							<el-form-item label="上线时间">
+								<el-date-picker v-model="formLabelAlign.onlineTime" type="month" placeholder="选择月" value-format="yyyyMM">
+								</el-date-picker>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="需求状态" label-width="100px">
+								<el-select v-model="formLabelAlign.demandStatus" placeholder="选择需求状态" clearable >
+									<el-option label="新建" value="0"></el-option>
+									<el-option label="进行中" value="1"></el-option>
+									<el-option label="已上线" value="2"></el-option>
+									<el-option label="关闭" value="3"></el-option>
+								</el-select>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="工作大类">
+								<el-select v-model="formLabelAlign.bigTypeId" placeholder="选择工作大类" clearable>
+									<el-option v-for="item in bigWorkOptions" :key="item.typeId" :label="item.typeName" :value="item.typeId">
+									</el-option>
+								</el-select>
+							</el-form-item>
+							<el-form-item label="工作小类">
+								<el-select v-model="formLabelAlign.smallTypeId" placeholder="选择工作小类" clearable filterable>
+									<el-option v-for="item in smallWorkOptions" :key="item.smallTypeId" :label="item.workSmallType" :value="item.smallTypeId">
+									</el-option>
+								</el-select>
+							</el-form-item>
+							<!--</el-col>
+								<el-col>-->
+							<el-form-item>
+								<el-button type="primary" icon="el-icon-search" @click="searchHandle($event,'')" class="search">查询</el-button>
+								<el-button type="success" @click="downExcel('')" icon="el-icon-download" class="daochu">导出</el-button>
+							</el-form-item>
+							<!--</el-col>
+							</el-row>-->
+						</el-form>
+					</div>
+					<!-- 表格 -->
+					<el-table :data="tableData" stripe style="width: 100%;" class="tb-edit" :row-style="{height: '48px','font-size':'14px'}"
+					 border :header-cell-style="{background:'#f4f8fb',height:'38px','font-size':'14px','font-weight':'bold'}">
+						<el-table-column prop="workDate" label="月份">
+						</el-table-column>
+						<el-table-column prop="sourceBy" label="提出人">
+						</el-table-column>
+						<el-table-column prop="cqCode" label="CQ单号">
+						</el-table-column>
+						<el-table-column prop="demandName" label="需求类型">
+						</el-table-column>
+						<el-table-column prop="demandContent" label="需求内容">
+						</el-table-column>
+						<el-table-column prop="workBigType" label="工作大类">
+						</el-table-column>
+						<el-table-column prop="workSmallType" label="工作小类">
+						</el-table-column>
+						<el-table-column prop="workItem" label="工作项">
+						</el-table-column>
+						<el-table-column prop="workContent" label="工作内容">
+							<template scope="scope">{{scope.row.workContent|labelFilter}}</template>
+						</el-table-column>
+						<el-table-column prop="outputName" label="输出物">
+						</el-table-column>
+						<el-table-column prop="modelCode" label="编号">
+						</el-table-column>
+						<el-table-column prop="normalHours" label="标准工时">
+						</el-table-column>
+						<el-table-column prop="difficultDegree" label="难度系数">
+							<template scope="scope">
+								<div>{{scope.row.difficultDegree}}</div>
+								<i class="el-icon-edit-outline eidtIcon" v-if="scope.row.userId.indexOf(userId)!==-1&&scope.row.roleId.indexOf(roleId)!==-1"
+								 @click="showDialog(scope.$index,scope.row)"></i>
+							</template>
+						</el-table-column>
+						<el-table-column prop="workNum" label="数量">
+							<template scope="scope">
+								<div>{{scope.row.workNum}}</div>
+								<i class="el-icon-edit-outline eidtIcon" v-if="scope.row.userId.indexOf(userId)!==-1&&scope.row.roleId.indexOf(roleId)!==-1"
+								 @click="showDialog(scope.$index,scope.row)"></i>
+							</template>
+						</el-table-column>
+						<el-table-column prop="workTime" label="工时">
+						</el-table-column>
+						<el-table-column prop="manMonth" label="人月">
+							<template scope="scope">{{scope.row.manMonth?parseFloat(scope.row.manMonth).toFixed(3):''}}</template>
+						</el-table-column>
+						<el-table-column prop="address" label="操作" width="100">
+							<template slot-scope="scope">
+								<el-button @click="handleEditClick(scope.row)" type="text" size="small" v-if="scope.row.userId.indexOf(userId)!==-1&&scope.row.roleId.indexOf(roleId)!==-1">核算工作量</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+					<!-- 表格 end -->
+
+					<!-- 分页 -->
+					<div class="block">
+						<el-pagination align="right" @size-change="myHandleSizeChange" @current-change="myHandleCurrentChange"
+						 :current-page="myCurrentPage" :page-sizes="[50, 100, 200, 500]" :page-size="myPageSize" layout="total, sizes, prev, pager, next, jumper"
+						 :total="page.total">
+						</el-pagination>
+					</div>
+					<!-- 分页 end-->
+					<!--弹窗-->
+					<el-dialog title="提示" :visible.sync="dialogVisible" width="30%" :modal-append-to-body='false'>
+						<el-form ref="ruleForm" :model="dialogForm" label-width="80px" :rules="dialogRules">
+							<el-form-item label="难度系数" prop="difficultDegree" required>
+								<!--<el-input v-model="dialogForm.difficultDegree"></el-input>-->
+								<el-select v-model="dialogForm.difficultDegree" placeholder="请选择">
+									<el-option v-for="tab in difficultDegreeList" :key="tab.value" :label="tab.label" :value="tab.value">
+									</el-option>
+								</el-select>
+							</el-form-item>
+							<el-form-item label="数量" prop="workNum" required>
+								<el-input v-model="dialogForm.workNum" type="number" min="0"></el-input>
+							</el-form-item>
+						</el-form>
+						<span slot="footer" class="dialog-footer">
+							<el-button @click="dialogVisible = false">取 消</el-button>
+							<el-button type="primary" @click="accountDown('ruleForm')">完 成</el-button>
+						</span>
+					</el-dialog>
+					<!--弹窗 end-->
+				</el-tab-pane>
+				<el-tab-pane label="全部工作清单" v-if="isAll == 'isAll'" name="second">
+					<div>
+						<el-form label-width="80px" :model="allFormLabelAlign" :inline="true">
+							<!--<el-row :gutter="18">
+								<el-col :span="6">-->
+							<el-form-item label="需求类型">
+								<el-select v-model="allFormLabelAlign.demandTypeId" placeholder="选择需求类型" clearable filterable>
+									<el-option v-for="item in DemandTypeOtion" :key="item.typeId" :label="item.typeName" :value="item.typeId">
+									</el-option>
+								</el-select>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="附件">
+								<el-select v-model="allFormLabelAlign.hasOutput" clearable>
+									<el-option label="有" value="1"></el-option>
+									<el-option label="无" value="0"></el-option>
+								</el-select>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="CQ单号">
+								<el-input v-model="allFormLabelAlign.cqCode" maxlength="15" show-word-limit></el-input>
+							</el-form-item>
+							<!--</el-col>
+							</el-row>
+							<el-row>
+								<el-col :span="6">-->
+							<el-form-item label="工作日期">
+								<el-date-picker v-model="allFormLabelAlign.workDate" type="month" placeholder="选择月" value-format="yyyyMM">
+								</el-date-picker>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="需求内容">
+								<el-input v-model="allFormLabelAlign.demandContent" maxlength="50" show-word-limit></el-input>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="提出人">
+								<el-input v-model="allFormLabelAlign.sourceBy"></el-input>
+							</el-form-item>
+							<!--</el-col>
+							</el-row>
+							<el-row>
+								<el-col :span="6">-->
+							<el-form-item label="上线时间">
+								<el-date-picker v-model="allFormLabelAlign.onlineTime" type="month" placeholder="选择月" value-format="yyyyMM">
+								</el-date-picker>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="需求状态" label-width="100px">
+								<el-select v-model="allFormLabelAlign.demandStatus" placeholder="选择需求状态" clearable>
+									<el-option label="新建" value="0"></el-option>
+									<el-option label="进行中" value="1"></el-option>
+									<el-option label="已上线" value="2"></el-option>
+									<el-option label="关闭" value="3"></el-option>
+								</el-select>
+							</el-form-item>
+							<!--</el-col>
+								<el-col :span="6">-->
+							<el-form-item label="工作大类">
+								<el-select v-model="allFormLabelAlign.bigTypeId" placeholder="选择工作大类" clearable>
+									<el-option v-for="item in bigWorkOptions" :key="item.typeId" :label="item.typeName" :value="item.typeId">
+									</el-option>
+								</el-select>
+							</el-form-item>
+							<el-form-item label="工作小类">
+								<el-select v-model="allFormLabelAlign.smallTypeId" placeholder="选择工作小类" clearable filterable>
+									<el-option v-for="item in smallWorkOptions" :key="item.smallTypeId" :label="item.workSmallType" :value="item.smallTypeId">
+									</el-option>
+								</el-select>
+							</el-form-item>
+							<!--</el-col>
+								<el-col>-->
+							<el-form-item>
+								<el-button type="primary" icon="el-icon-search" @click="searchHandle($event,'all')" class="search">查询</el-button>
+								<el-button type="success" @click="downExcel('all')" icon="el-icon-download" class="daochu">导出</el-button>
+							</el-form-item>
+							<!--</el-col>
+							</el-row>-->
+						</el-form>
+					</div>
+
+					<!-- 表格 -->
+					<el-table :data="allTableData" stripe style="width: 100%;" class="tb-edit" :row-style="{height: '48px','font-size':'14px'}"
+					 border :header-cell-style="{background:'#f4f8fb',height:'38px','font-size':'14px','font-weight':'bold'}">
+						<el-table-column prop="workDate" label="月份">
+						</el-table-column>
+						<el-table-column prop="sourceBy" label="提出人">
+						</el-table-column>
+						<el-table-column prop="cqCode" label="CQ单号">
+						</el-table-column>
+						<el-table-column prop="demandName" label="需求类型">
+						</el-table-column>
+						<el-table-column prop="demandContent" label="需求内容">
+						</el-table-column>
+						<el-table-column prop="workBigType" label="工作大类">
+						</el-table-column>
+						<el-table-column prop="workSmallType" label="工作小类">
+						</el-table-column>
+						<el-table-column prop="workItem" label="工作项">
+						</el-table-column>
+						<el-table-column prop="workContent" label="工作内容">
+							<template scope="scope">{{scope.row.workContent|labelFilter}}</template>
+						</el-table-column>
+						<el-table-column prop="outputName" label="输出物">
+						</el-table-column>
+						<el-table-column prop="modelCode" label="编号">
+						</el-table-column>
+						<el-table-column prop="normalHours" label="标准工时">
+						</el-table-column>
+						<el-table-column prop="difficultDegree" label="难度系数">
+							<template scope="scope">
+								<div>{{scope.row.difficultDegree}}</div>
+								<i class="el-icon-edit-outline eidtIcon" @click="showDialog(scope.$index,scope.row,'all')"></i>
+							</template>
+						</el-table-column>
+						<el-table-column prop="workNum" label="数量">
+							<template scope="scope">
+								<div>{{scope.row.workNum}}</div>
+								<i class="el-icon-edit-outline eidtIcon" @click="showDialog(scope.$index,scope.row,'all')"></i>
+							</template>
+						</el-table-column>
+						<el-table-column prop="workTime" label="工时">
+						</el-table-column>
+						<el-table-column prop="manMonth" label="人月">
+							<template scope="scope">{{scope.row.manMonth?parseFloat(scope.row.manMonth).toFixed(3):''}}</template>
+						</el-table-column>
+						<el-table-column prop="address" label="操作" width="100">
+							<template slot-scope="scope">
+								<el-button @click="handleEditClick(scope.row)" type="text" size="small">核算工作量</el-button>
+							</template>
+						</el-table-column>
+					</el-table>
+					<!-- 表格 end -->
+					<!-- 分页 -->
+					<div class="block">
+						<el-pagination align="right" @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
+						 :page-sizes="[50, 100, 200, 500]" :page-size="pageSize" layout="total, sizes, prev, pager, next, jumper" :total="allPage.total">
+						</el-pagination>
+					</div>
+					<!-- 分页 end-->
+					<!--弹窗-->
+					<el-dialog title="提示" :visible.sync="dialogVisible" width="30%" :modal-append-to-body='false'>
+						<el-form ref="ruleForm" :model="dialogForm" label-width="80px" :rules="dialogRules" :inline="true">
+							<el-form-item label="难度系数" prop="difficultDegree" required>
+								<el-select v-model="dialogForm.difficultDegree" placeholder="请选择">
+									<el-option v-for="tab in difficultDegreeList" :key="tab.value" :label="tab.label" :value="tab.value">
+									</el-option>
+								</el-select>
+							</el-form-item>
+							<el-form-item label="数量" prop="workNum" required>
+								<el-input v-model="dialogForm.workNum" type="number" min="0"></el-input>
+							</el-form-item>
+						</el-form>
+						<span slot="footer" class="dialog-footer">
+							<el-button @click="dialogVisible = false">取 消</el-button>
+							<el-button type="primary" @click="accountDown('ruleForm')">完 成</el-button>
+						</span>
+					</el-dialog>
+					<!--弹窗 end-->
+				</el-tab-pane>
+			</el-tabs>
+			<!-- 切换选项 end-->
+
+
+		</div>
+	</body>
+	<script th:src="@{/js/vue.min.js}"></script>
+	<script th:src="@{/js/axios.min.js}"></script>
+	<script th:src="@{/js/jquery.min.js}"></script>
+    <script th:src="@{/js/bootstrap.min.js}"></script>
+    <script th:src="@{/ruoyi/js/ry-ui.js}"></script>
+    <script th:src="@{/ruoyi/js/common.js?v=4.5.0}"></script>
+	<script th:src="@{/ajax/libs/layer/layer.min.js}"></script>
+	<script th:src="@{/js/element.min.js}"></script>
+	<script type="text/javascript">
+		Vue.filter('labelFilter', function(value) {
+			if (!value) return ''
+			return value.replace(/<[^<>]+>/g, '').replace(/&nbsp;/ig, '')
+		})
+
+
+		const app = new Vue({
+			el: '#app-jobs',
+			data: {
+				activeName: 'first',
+				formLabelAlign: {
+					demandTypeId: '',
+					hasOutput: '',
+					cqCode: '',
+					workDate: '',
+					onlineTime: '',
+					demandContent: '',
+					demandStatus: '',
+					sourceBy: '',
+					smallTypeId:''
+				},
+				allFormLabelAlign: {
+					demandTypeId: '',
+					hasOutput: '',
+					cqCode: '',
+					workDate: '',
+					onlineTime: '',
+					demandContent: '',
+					demandStatus: '',
+					sourceBy: '',
+					smallTypeId:''
+				},
+				// 全部				
+				allTableData: [],
+				snapAllTableData: [],
+				currentPage: 1,
+				pageSize: 50,
+				// 全部 end
+				value1: '',
+				value2: '',
+				value: '',
+				tableData: [],
+				currentPage1: 5,
+				currentPage2: 5,
+				currentPage3: 5,
+				currentPage4: 4,
+				DemandTypeOtion: [], // 需求类型
+				/*分页*/
+				page: {
+					total: 0,
+				},
+				/*全部分页*/
+				allPage: {
+					total: 0,
+				},
+				isAll: null, // isAll显示全部 ''显示我的
+				userId: '',
+				roleId: '',
+				dialogVisible: false,
+				dialogForm: {
+					difficultDegree: 0,
+					workNum: 0,
+					workTimeType: '',
+					index: 0,
+					table: ''
+				},
+				// 校验部分
+				dialogRules: {
+					difficultDegree: [{
+						required: true,
+						message: '请输入难度系数',
+						trigger: 'blur'
+					}],
+					workNum: [{
+						required: true,
+						message: '请输入数量',
+						trigger: 'blur'
+					}]
+				},
+				myPageSize: 50,
+				myCurrentPage: 1,
+				myList: [],
+				difficultDegreeList: [],
+				params: {},
+				bigWorkOptions: [],
+				smallWorkOptions: []
+			},
+			mounted() {},
+			methods: {
+				handleClick(tab, event) {
+					console.log(tab, event);
+				},
+				handleSizeChange(val) {
+					this.pageSize = val
+					let list = this.snapAllTableData;
+					this.allTableData = this.setPages(list, this.currentPage, val)
+
+				},
+				handleCurrentChange(val) {
+					this.currentPage = val
+					let list = this.snapAllTableData;
+					this.allTableData = this.setPages(list, val, this.pageSize)
+				},
+				// 更换总展示条数
+				myHandleSizeChange(size) {
+					this.myPageSize = size
+					let list = this.myList.rows;
+					this.tableData = this.setPages(list, this.currentPage, size)
+				},
+				// 切换页
+				myHandleCurrentChange(index) {
+					this.myCurrentPage = index
+					let list = this.myList.rows;
+					this.tableData = this.setPages(list, index, this.myPageSize)
+					console.log(this.tableData)
+				},
+				/*修改表格参数接口*/
+				checkTableData(arrRes) {
+					const formData = new FormData();
+					if (arrRes) {
+						arrRes.forEach((tab, index) => {
+							formData.append(tab.name, tab.value)
+						})
+					}
+					const getList = axios({
+						method: 'post',
+						url: "/workload/checkWorkloadById",
+						data: formData
+					});
+
+					getList.then(res => {
+						if (res.data.code === 0) {
+							console.log('修改成功')
+						} else {
+							console.log('修改失败')
+						}
+					});
+					getList.catch(err => {
+						console.log(err)
+					});
+				},
+				/*查询用户角色*/
+				getRole: function() {
+					const getList = axios({
+						method: 'post',
+						url: "/workload/getRole",
+					});
+					getList.then(res => {
+						if (res.data.code === 0) {
+							this.isAll = res.data.data.isAll
+							this.userId = res.data.data.userId
+							this.roleId = res.data.data.roleId
+							//var arrRes = [],allArrRes=[]
+							// 首页带过来需求内容参数
+							/*if(this.params.all===''){ // 我的
+								arrRes.push({'name': 'demandContent', 'value': this.params.demandContent})
+							} else {
+								allArrRes.push({'name': 'demandContent', 'value': this.params.demandContent})
+							}*/
+							if (this.isAll !== '') {
+								this.getTableData([{
+									'name': 'isAll',
+									'value': this.isAll
+								}])
+							}
+							this.getTableData([{
+								'name': 'isAll',
+								'value': ''
+							}])
+							/*if(this.isAll!==''){
+								this.getTableData(allArrRes)
+							}
+							this.getTableData(arrRes)*/
+						} else {}
+					});
+					getList.catch(err => {
+						console.log(err)
+					});
+					return this.activeName;
+				},
+				/*获取需求类型*/
+				getDemandType: function() {
+					const getList = axios({
+						method: 'post',
+						url: "/note/getDemandTypeList",
+					});
+					getList.then(res => {
+						if (res.data.code === 0) {
+							this.DemandTypeOtion = res.data.data
+						} else {
+							this.DemandTypeOtion = [];
+						}
+					});
+					getList.catch(err => {
+						console.log(err)
+					});
+				},
+				/*获取工作大类*/
+				getworkCateList: function() {
+					const getList = axios({
+						method: 'post',
+						url: "/note/getWorkCategories",
+					});
+					getList.then(res => {
+						if (res.data.code === 0) {
+							this.bigWorkOptions = res.data.data;
+						} else {
+							this.bigWorkOptions = [];
+						}
+					});
+					getList.catch(err => {
+						console.log(err)
+					});
+				},
+				/*获取工作小类*/
+				getSmallworkList: function() {
+					const getList = axios({
+						method: 'get',
+						url: "/workload/querySmallTypes",
+					});
+					getList.then(res => {
+						if (res.data.code === 0) {
+							this.smallWorkOptions = res.data.data;
+						} else {
+							this.smallWorkOptions = [];
+						}
+					});
+					getList.catch(err => {
+						console.log(err)
+					});
+				},
+				getTableData: function(arrRes) {
+					const formData = new FormData();
+					if (arrRes) {
+						arrRes.forEach((tab, index) => {
+							formData.append(tab.name, tab.value)
+						})
+					}
+					const getList = axios({
+						method: 'post',
+						url: "/workload/findWorkload",
+						data: formData
+					});
+					var flag = false;
+					getList.then(res => {
+						arrRes.forEach((tab, index) => {
+							if (tab.value === 'isAll') {
+								flag = true
+								return
+							}
+						})
+						if (res.data.code === 0) {
+							if (flag) {
+								this.allTableData = res.data.rows;
+								this.snapAllTableData = res.data.rows;
+								this.allTableData = this.setPages(res.data.rows, this.currentPage, this.pageSize)
+								/*分页*/
+								this.allPage.total = res.data.total;
+							} else {
+								this.tableData = res.data.rows;
+								this.myList = res.data
+								this.tableData = this.setPages(res.data.rows, this.myCurrentPage, this.myPageSize)
+								/*分页*/
+								this.page.total = res.data.total
+							}
+						} else {
+							if (flag) {
+								this.allTableData = [];
+								/*分页*/
+								this.allPage.total = 0
+							} else {
+								this.tableData = [];
+								/*分页*/
+								this.page.total = 0
+							}
+						}
+					});
+					getList.catch(err => {
+						console.log(err)
+					});
+				},
+				/*搜索*/
+				searchHandle(ev, str) {
+					var arrRes = [],
+						arr = {};
+					if (str !== 'all') {
+						arr = this.formLabelAlign;
+					} else {
+						arr = this.allFormLabelAlign;
+						arrRes.push({
+							name: "isAll",
+							value: 'isAll'
+						})
+					}
+					for (item in arr) {
+						if (item.value !== null) {
+							arrRes.push({
+								'name': item,
+								'value': arr[item]
+							})
+						}
+
+					}
+					this.getTableData(arrRes)
+				},
+				handleEditClick(row) {
+					// window.location.href = "/workload/accountingJobs?demandId=" + row.demandId + "&bigTypeId=" + row.bigTypeId +
+					// 	"&smallTypeId=" + row.smallTypeId + "&workloadId=" + row.workloadId + "&moduleId=" + row.moduleId +
+                    //     "&workDate=" + row.workDate;
+                        let url = "/workload/accountingJobs?demandId=" + row.demandId + "&bigTypeId=" + row.bigTypeId +
+						"&smallTypeId=" + row.smallTypeId + "&workloadId=" + row.workloadId + "&moduleId=" + row.moduleId +
+                        "&workDate=" + row.workDate;
+                        $.modal.openTab('核算工作量', url);
+					//window.location.href = "/note/worknote"
+				},
+
+				// 自定义分页
+				setPages(list, pageIndex, pageSize) {
+					return list.slice((pageIndex - 1) * pageSize, pageIndex * pageSize)
+				},
+				showDialog(index, row, table) {
+					this.difficultDegreeList = [];
+					this.$nextTick(() => {
+						this.$refs['ruleForm'].resetFields()
+					})
+					this.dialogVisible = true;
+					this.dialogForm.difficultDegree = row.difficultDegree;
+					this.dialogForm.workNum = row.workNum;
+					this.dialogForm.workTimeType = row.workTimeType;
+					this.dialogForm.normalHours = row.normalHours;
+					this.dialogForm.index = index
+					this.dialogForm.table = table;
+					// 计算难度系数
+					var floor = parseFloat(row.difficultFloor); // 下限
+					var cile = parseFloat(row.difficultCeiling); // 上限
+					for (var i = floor; i <= cile + 0.1; i += 0.1) {
+						this.difficultDegreeList.push({
+							'label': i.toFixed(1),
+							'value': i.toFixed(1)
+						})
+					}
+				},
+				accountDown(formName) {
+					let isReturn = false;
+					this.$refs[formName].validate((valid) => {
+						if (valid) {
+							isReturn = true
+							this.dialogVisible = false;
+						} else {
+							isReturn = false
+							console.log('error submit!!');
+							return false;
+						}
+					});
+					if (isReturn == false) return false;
+					/*set 计算*/
+					let row;
+					if (this.dialogForm.table === 'all') {
+						row = this.allTableData[this.dialogForm.index];
+					} else {
+						row = this.tableData[this.dialogForm.index];
+					}
+					row.difficultDegree = this.dialogForm.difficultDegree;
+					row.workNum = this.dialogForm.workNum;
+					if (this.dialogForm.workTimeType == '0') {
+						row.workTime = (this.dialogForm.difficultDegree * this.dialogForm.workNum * this.dialogForm.normalHours).toFixed(
+							2);
+					}
+					/*传参*/
+					let arrRes = [];
+					arrRes.push({
+						name: "difficultDegree",
+						value: row.difficultDegree ? row.difficultDegree : ''
+					}, {
+						name: "outputName",
+						value: row.outputName ? row.outputName : ''
+					}, {
+						name: "outputUrl",
+						value: row.outputUrl ? row.outputUrl : ''
+					}, {
+						name: "normalHours ",
+						value: row.normalHours ? row.normalHours : ''
+					}, {
+						name: "workContent ",
+						value: row.workContent ? row.workContent : ''
+					}, {
+						name: "workNum ",
+						value: row.workNum ? row.workNum : ''
+					}, {
+						name: "workTime ",
+						value: row.workTime ? row.workTime : ''
+					}, {
+						name: "workTimeType ",
+						value: row.workTimeType ? row.workTimeType : ''
+					}, {
+						name: "workloadId ",
+						value: row.workloadId ? row.workloadId : ''
+					});
+
+					this.checkTableData(arrRes);
+				},
+				/*导出*/
+				downExcel(val) {
+					var url = '/workload/exlWorkload',
+						arr = {},
+						arrRes = [];
+					if (val === 'all') {
+						arr = this.allFormLabelAlign;
+						arrRes.push({
+							'name': 'isAll',
+							'value': 'isAll'
+						}, )
+					} else {
+						arr = this.formLabelAlign;
+						arrRes.push({
+							'name': 'isAll',
+							'value': ''
+						})
+					}
+					for (item in arr) {
+						arrRes.push({
+							'name': item,
+							'value': arr[item]
+						})
+					}
+					arrRes.push({
+						'name': 'userId',
+						'value': this.userId
+					})
+					$.post(url, arrRes, function(res) {
+						if (res.code == 0) {
+							window.location.href = "/common/download?fileName=" + res.msg + "&delete=" + true;
+						} else {
+							this.$message.error(res.msg);
+						}
+					});
+				},
+				/*获取url参数*/
+				getQueryVariable(variable) {
+					var query = window.location.search.substring(1);
+					var vars = query.split("&");
+					/*vars=vars.toString().replace(/%20/g,"");  // 如果有 %20 则去除替换成 ''*/
+					for (var i = 0; i < vars.length; i++) {
+						var pair = vars[i].split("=");
+						if (pair[0] == variable) {
+							return pair[1];
+						}
+					}
+				},
+				/*获取url参数2*/
+				getParams() {
+					debugger
+
+					//this.params.demandContent = this.getQueryVariable("demandContent");
+					let demandContent = escape(this.getQueryVariable("demandContent"));
+					this.params.demandContent = unescape(demandContent);
+
+					let name = escape(val.demandContent);
+					name = unescape(name);
+
+					this.params.all = this.getQueryVariable("all");
+				},
+			},
+			created: function() {
+				//this.getParams()
+				this.getRole();
+				this.getDemandType();
+				this.getworkCateList();
+				this.getSmallworkList()
+				// 获取当前月份
+				var firstDate = new Date();
+				var currentMonth = firstDate.getFullYear() + ((firstDate.getMonth() + 1) < 10 ? "0" : "") + (firstDate.getMonth() +
+					1);
+				this.formLabelAlign.workDate = currentMonth
+				this.allFormLabelAlign.workDate = currentMonth
+			}
+		})
+	</script>
+</html>

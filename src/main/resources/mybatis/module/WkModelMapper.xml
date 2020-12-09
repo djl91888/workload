@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.module.model.mapper.WkModelMapper">
+
+    <resultMap type="com.ruoyi.project.module.model.domain.WkModel" id="WkModelResult">
+        <result property="modelId" column="model_id"/>
+        <result property="modelType" column="model_type"/>
+        <result property="modelCode" column="model_code"/>
+        <result property="workType" column="work_type"/>
+        <result property="roleId" column="role_id"/>
+        <result property="status" column="status"/>
+        <result property="workItem" column="work_item"/>
+        <result property="workTimeType" column="work_time_type"/>
+        <result property="workTime" column="work_time"/>
+        <result property="workTimeUnit" column="work_time_unit"/>
+        <result property="difficultFloor" column="difficult_floor"/>
+        <result property="difficultCeiling" column="difficult_ceiling"/>
+        <result property="createrId" column="creater_id"/>
+        <result property="createrName" column="creater_name"/>
+        <result property="createTime" column="create_time"/>
+        <result property="param1" column="param1"/>
+        <result property="param2" column="param2"/>
+    </resultMap>
+
+    <sql id="selectWkModelVo">
+		select model_id, model_type, model_code, work_type, role_id, work_item, work_time_type, work_time, work_time_unit, difficult_floor, difficult_ceiling, creater_id, creater_name, create_time, param1, param2 from wk_model
+	</sql>
+
+    <select id="selectWkModelList" parameterType="com.ruoyi.project.module.model.domain.WkModel" resultMap="WkModelResult">
+        <include refid="selectWkModelVo"/>
+        where status = '1'
+        <if test="modelType != null  and modelType != ''">and model_type = #{modelType}</if>
+        <if test="modelCode != null  and modelCode != ''">and model_code = #{modelCode}</if>
+        <if test="workType != null  and workType != ''">and instr(work_type, #{workType}) > 0</if>
+        <if test="roleId != null  and roleId != ''">and role_id = #{roleId}</if>
+        <if test="workItem != null  and workItem != ''">and work_item = #{workItem}</if>
+        <if test="workTimeType != null  and workTimeType != ''">and work_time_type = #{workTimeType}</if>
+        <if test="workTime != null  and workTime != ''">and work_time = #{workTime}</if>
+        <if test="workTimeUnit != null  and workTimeUnit != ''">and work_time_unit = #{workTimeUnit}</if>
+        <if test="difficultFloor != null  and difficultFloor != ''">and difficult_floor = #{difficultFloor}</if>
+        <if test="difficultCeiling != null  and difficultCeiling != ''">and difficult_ceiling = #{difficultCeiling}</if>
+        <if test="createrId != null  and createrId != ''">and creater_id = #{createrId}</if>
+        <if test="createrName != null  and createrName != ''">and creater_name like concat(concat('%', #{createrName}),
+            '%')
+        </if>
+        <if test="param1 != null  and param1 != ''">and param1 = #{param1}</if>
+        <if test="param2 != null  and param2 != ''">and param2 = #{param2}</if>
+        ORDER BY TO_NUMBER(SUBSTR(MODEL_CODE, INSTR(MODEL_CODE, '-') + 1))
+    </select>
+
+    <select id="selectWkModelById" parameterType="java.lang.String" resultMap="WkModelResult">
+        <include refid="selectWkModelVo"/>
+        where model_id = #{modelId}
+    </select>
+
+    <insert id="insertWkModel" parameterType="com.ruoyi.project.module.model.domain.WkModel">
+        <selectKey keyProperty="modelId" resultType="java.lang.String" order="BEFORE">
+            SELECT seq_wk_model.NEXTVAL as modelId FROM DUAL
+        </selectKey>
+        insert into wk_model
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="modelId != null">model_id,</if>
+            <if test="modelType != null">model_type,</if>
+            <if test="modelCode != null">model_code,</if>
+            <if test="workType != null">work_type,</if>
+            <if test="roleId != null">role_id,</if>
+            <if test="workItem != null">work_item,</if>
+            <if test="workTimeType != null">work_time_type,</if>
+            <if test="workTime != null">work_time,</if>
+            <if test="workTimeUnit != null">work_time_unit,</if>
+            <if test="difficultFloor != null">difficult_floor,</if>
+            <if test="difficultCeiling != null">difficult_ceiling,</if>
+            <if test="createrId != null">creater_id,</if>
+            <if test="createrName != null">creater_name,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="param1 != null">param1,</if>
+            <if test="param2 != null">param2,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="modelId != null">#{modelId},</if>
+            <if test="modelType != null">#{modelType},</if>
+            <if test="modelCode != null">#{modelCode},</if>
+            <if test="workType != null">#{workType},</if>
+            <if test="roleId != null">#{roleId},</if>
+            <if test="workItem != null">#{workItem},</if>
+            <if test="workTimeType != null">#{workTimeType},</if>
+            <if test="workTime != null">#{workTime},</if>
+            <if test="workTimeUnit != null">#{workTimeUnit},</if>
+            <if test="difficultFloor != null">#{difficultFloor},</if>
+            <if test="difficultCeiling != null">#{difficultCeiling},</if>
+            <if test="createrId != null">#{createrId},</if>
+            <if test="createrName != null">#{createrName},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="param1 != null">#{param1},</if>
+            <if test="param2 != null">#{param2},</if>
+        </trim>
+    </insert>
+
+    <update id="updateWkModel" parameterType="com.ruoyi.project.module.model.domain.WkModel">
+        update wk_model
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="modelType != null">model_type = #{modelType},</if>
+            <if test="modelCode != null">model_code = #{modelCode},</if>
+            <if test="workType != null">work_type = #{workType},</if>
+            <if test="roleId != null">role_id = #{roleId},</if>
+            <if test="workItem != null">work_item = #{workItem},</if>
+            <if test="workTimeType != null">work_time_type = #{workTimeType},</if>
+            <if test="workTime != null">work_time = #{workTime},</if>
+            <if test="workTimeUnit != null">work_time_unit = #{workTimeUnit},</if>
+            <if test="difficultFloor != null">difficult_floor = #{difficultFloor},</if>
+            <if test="difficultCeiling != null">difficult_ceiling = #{difficultCeiling},</if>
+            <if test="createrId != null">creater_id = #{createrId},</if>
+            <if test="createrName != null">creater_name = #{createrName},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="param1 != null">param1 = #{param1},</if>
+            <if test="param2 != null">param2 = #{param2},</if>
+        </trim>
+        where model_id = #{modelId}
+    </update>
+
+    <delete id="deleteWkModelById" parameterType="com.ruoyi.project.module.model.domain.WkModel">
+        delete from wk_model where model_id = #{modelId}
+    </delete>
+
+    <delete id="deleteWkModelByIds" parameterType="java.lang.String">
+        delete from wk_model where model_id in
+        <foreach item="modelId" collection="array" open="(" separator="," close=")">
+            #{modelId}
+        </foreach>
+    </delete>
+</mapper>

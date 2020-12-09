@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.module.type.mapper.WkTypeMapper">
+
+	<resultMap type="com.ruoyi.project.module.type.domain.WkType" id="WkTypeResult">
+		<result property="typeId"    column="type_id"    />
+		<result property="typeLevel"    column="type_level"    />
+		<result property="secLevel"    column="sec_level"    />
+		<result property="typeName"    column="type_name"    />
+		<result property="createrId"    column="creater_id"    />
+		<result property="createTime"    column="create_time"    />
+		<result property="param1"    column="param1"    />
+		<result property="param2"    column="param2"    />
+		<result property="createrName"    column="creater_name"    />
+	</resultMap>
+
+	<sql id="selectWkTypeVo">
+		select type_id, type_level, sec_level, type_name, creater_id, create_time, param1, param2, creater_name from wk_type
+	</sql>
+
+	<select id="selectWkTypeList" resultMap="WkTypeResult">
+<!--			parameterType="com.ruoyi.project.module.type.domain.WkType"-->
+
+		<include refid="selectWkTypeVo"/>
+		<where>
+			<if test="typeLevel != null  and typeLevel != ''"> and type_level = #{typeLevel}</if>
+			<if test="secLevel != null  and secLevel != ''"> and sec_level = #{secLevel}</if>
+			<if test="typeName != null  and typeName != ''"> and type_name like concat(concat('%', #{typeName}), '%')</if>
+			<if test="createrId != null  and createrId != ''"> and creater_id = #{createrId}</if>
+			<if test="param1 != null  and param1 != ''"> and param1 = #{param1}</if>
+			<if test="param2 != null  and param2 != ''"> and param2 = #{param2}</if>
+			<if test="createrName != null  and createrName != ''"> and creater_name like concat(concat('%', #{createrName}), '%')</if>
+		</where>
+		order by to_number(sort)
+	</select>
+
+	<select id="selectWkTypeById" parameterType="java.lang.String" resultMap="WkTypeResult">
+		<include refid="selectWkTypeVo"/>
+		where type_id = #{typeId}
+	</select>
+
+	<insert id="insertWkType" parameterType="com.ruoyi.project.module.type.domain.WkType">
+		<selectKey keyProperty="typeId" resultType="java.lang.String" order="BEFORE">
+			SELECT seq_wk_type.NEXTVAL as typeId FROM DUAL
+		</selectKey>
+		insert into wk_type
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="typeId != null">type_id,</if>
+			<if test="typeLevel != null">type_level,</if>
+			<if test="secLevel != null">sec_level,</if>
+			<if test="typeName != null">type_name,</if>
+			<if test="createrId != null">creater_id,</if>
+			<if test="createTime != null">create_time,</if>
+			<if test="param1 != null">param1,</if>
+			<if test="param2 != null">param2,</if>
+			<if test="createrName != null">creater_name,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="typeId != null">#{typeId},</if>
+			<if test="typeLevel != null">#{typeLevel},</if>
+			<if test="secLevel != null">#{secLevel},</if>
+			<if test="typeName != null">#{typeName},</if>
+			<if test="createrId != null">#{createrId},</if>
+			<if test="createTime != null">#{createTime},</if>
+			<if test="param1 != null">#{param1},</if>
+			<if test="param2 != null">#{param2},</if>
+			<if test="createrName != null">#{createrName},</if>
+		</trim>
+	</insert>
+
+	<update id="updateWkType" parameterType="com.ruoyi.project.module.type.domain.WkType">
+		update wk_type
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="typeLevel != null">type_level = #{typeLevel},</if>
+			<if test="secLevel != null">sec_level = #{secLevel},</if>
+			<if test="typeName != null">type_name = #{typeName},</if>
+			<if test="createrId != null">creater_id = #{createrId},</if>
+			<if test="createTime != null">create_time = #{createTime},</if>
+			<if test="param1 != null">param1 = #{param1},</if>
+			<if test="param2 != null">param2 = #{param2},</if>
+			<if test="createrName != null">creater_name = #{createrName},</if>
+		</trim>
+		where type_id = #{typeId}
+	</update>
+
+	<delete id="deleteWkTypeById" parameterType="com.ruoyi.project.module.type.domain.WkType">
+        delete from wk_type where type_id = #{typeId}
+    </delete>
+
+	<delete id="deleteWkTypeByIds" parameterType="java.lang.String">
+		delete from wk_type where type_id in
+		<foreach item="typeId" collection="array" open="(" separator="," close=")">
+			#{typeId}
+		</foreach>
+	</delete>
+</mapper>

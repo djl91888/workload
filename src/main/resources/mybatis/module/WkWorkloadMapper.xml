@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.module.workload.mapper.WkWorkloadMapper">
+
+
+	<resultMap id="restBean" type="com.ruoyi.project.module.workload.domain.WorkloadResponseBean" >
+		<result property="demandId"    column="demandId"    />
+		<result property="roleId"    column="roleId"    />
+		<result property="workloadId"    column="workloadId"    />
+		<result property="userId"    column="userId"    />
+		<result property="workDate"    column="workDate"    />
+		<result property="sourceBy"    column="sourceBy"    />
+		<result property="cqCode"    column="cqCode"    />
+		<result property="demandTypeId"    column="demandTypeId"    />
+		<result property="demandName"    column="demandName"    />
+		<result property="demandContent"    column="demandContent"    />
+		<result property="bigTypeId"    column="bigTypeId"    />
+		<result property="workBigType"    column="workBigType"    />
+		<result property="smallTypeId"    column="smallTypeId"    />
+		<result property="workSmallType"    column="workSmallType"    />
+		<result property="workContent"    column="workContent"    />
+		<result property="workText"    column="workText"    />
+		<result property="outputName"    column="outputName"    />
+		<result property="outputUrl"    column="outputUrl"    />
+		<result property="modelCode"    column="modelCode"    />
+		<result property="moduleId"    column="moduleId"    />
+		<result property="normalHours"    column="normalHours"    />
+		<result property="difficultDegree"    column="difficultDegree"    />
+		<result property="difficultFloor"    column="difficultFloor"    />
+		<result property="difficultCeiling"    column="difficultCeiling"    />
+		<result property="workNum"    column="workNum"    />
+		<result property="workTime"    column="workTime"    />
+		<result property="unit"    column="unit"    />
+		<result property="manMonth"    column="manMonth"    />
+		<result property="demandStatus"    column="demandStatus"    />
+		<result property="demandSource"    column="demandSource"    />
+		<result property="workTimeType"    column="workTimeType"    />
+		<result property="createrName"    column="createrName"    />
+		<result property="workItem"    column="workItem"    />
+		<result property="workHours"    column="workHours"    />
+		<result property="expectWorkload"    column="expectWorkload"    />
+	</resultMap>
+
+	<!--查询工作量-->
+	<select id="getWorkloadById" resultMap="restBean">
+		select
+			wt.type_name workBigType,
+			wt1.type_name workSmallType,
+			wm.work_time normalHours,
+			wm.work_time_unit unit,
+			ww.workload_id workloadId,
+			ww.work_content workContent,
+			ww.output_name outputName,
+			ww.output_url outputUrl,
+			ww.difficult_degree difficultDegree,
+			wm.difficult_floor difficultFloor,
+			wm.difficult_ceiling difficultCeiling,
+			ww.work_num workNum,
+			ww.work_time workTime,
+			wm.work_time_type workTimeType
+		from wk_workload ww
+		left join wk_model wm on ww.work_model_id = wm.model_id
+		left join wk_type wt on ww.work_category_id = wt.type_id
+		left join wk_type wt1 on ww.work_type_id = wt1.type_id
+		where
+			ww.workload_id = #{workloadId}
+	</select>
+
+	<!--查询工作量清单列表-->
+	<select id="findWorkload" resultMap="restBean" parameterType="com.ruoyi.project.module.workload.domain.WorkloadRequestBean">
+		select
+		wm.role_id roleId,
+		wd.demand_id demandId,
+		w.workload_id workloadId,
+		wde.userId,
+		wde.relevant,
+		to_char(to_date(substr(w.work_date ,0,6),'yyyyMM'),'yyyy-MM') workDate,
+		wd.source_by sourceBy,
+		wd.cq_num cqCode,
+		wt.type_id demandTypeId,
+		wt.type_name demandName,
+		wd.demand_content demandContent,
+		wt2.type_id bigTypeId,
+		wt2.type_name workBigType,
+		wt3.type_id smallTypeId,
+		wt3.type_name workSmallType,
+		w.work_content workContent,
+		w.output_name outputName,
+		w.work_model_id moduleId,
+		wm.model_code modelCode,
+		wm.work_item workItem,
+		wm.WORK_TIME normalHours,
+		w.difficult_degree difficultDegree,
+		wm.difficult_floor difficultFloor,
+		wm.difficult_ceiling difficultCeiling,
+		w.work_num workNum,
+		w.work_time workTime,
+		wm.work_time_type workTimeType,
+		wm.work_time_unit unit,
+		w.man_month manMonth,
+		w.WORK_TEXT workText
+		from WK_WORKLOAD w
+		left join ( select wd.demand_id, wd.relevant, listagg(wd.user_id,',')  within group (order by wd.user_id) USERID from WK_DEMAND_EMPLOYEE wd  group by demand_id,wd.relevant) wde  on wde.demand_id = w.demand_id
+		left join WK_DEMAND wd on w.demand_id = wd.demand_id
+		left join WK_TYPE wt on wd.demand_type_id = wt.type_id
+		left join WK_TYPE wt2 on w.WORK_CATEGORY_ID = wt2.type_id
+		left join WK_TYPE wt3 on w.WORK_TYPE_ID = wt3.type_id
+		left join WK_MODEL wm on w.work_model_id = wm.model_id
+		where
+		1=1
+		<if test="isAll != 'isAll'.toString()">
+			and (instr(wde.RELEVANT,#{userId})>0 OR instr(wde.userId,#{userId}) >0)
+			and INSTR(wm.role_id, #{roleId}) > 0
+		</if>
+		<if test="demandTypeId != null and demandTypeId != ''">
+			and wt.type_id = #{demandTypeId}
+		</if>
+		<if test="hasOutput != null and hasOutput != ''">
+			and w.has_output = #{hasOutput}
+		</if>
+		<if test="sourceBy != null and sourceBy != ''">
+			and wd.SOURCE_BY = #{sourceBy}
+		</if>
+		<if test="cqCode != null and cqCode != ''">
+			and wd.cq_num like '%' || #{cqCode} ||'%'
+		</if>
+		<if test="demandContent != null and demandContent != ''">
+			and wd.demand_content like '%' || #{demandContent} ||'%'
+		</if>
+		<if test="demandStatus != null and demandStatus != ''">
+			and wd.DEMAND_STATUS = #{demandStatus}
+		</if>
+		<if test="workDate != null and workDate != ''">
+			and substr(w.work_date ,0,6) = #{workDate}
+		</if>
+		<if test="onlineTime != null and onlineTime != ''">
+			and substr(wd.ONLINE_TIME ,0,6) = #{onlineTime}
+		</if>
+		<if test="bigTypeId != null and bigTypeId != ''">
+			and wt2.type_id = #{bigTypeId}
+		</if>
+		<if test="smallTypeId != null and smallTypeId != ''">
+			and wt3.type_id = #{smallTypeId}
+		</if>
+		order by w.work_date desc
+	</select>
+
+	<!--查询基本信息-->
+	<select id="queryDemandById" resultMap="restBean">
+		select
+			w.demand_content demandContent,
+			w.cq_num cqCode,
+			w.demand_status demandStatus,
+			w.expect_workload expectWorkload,
+			wst.source_type_name demandSource,
+			w.SOURCE_BY sourceBy,
+			wt.type_name demandName
+		from WK_DEMAND w
+		left join WK_SOURCE_TYPE wst on w.SOURCE_ID = wst.source_type_id
+		left join WK_TYPE wt on w.demand_type_id = wt.type_id
+		where w.demand_id=#{demandId}
+	</select>
+
+	<!--查询工作小类-->
+	<select id="querySmallTypes" resultMap="restBean">
+		select
+		t.type_id smallTypeId,
+		t.type_name workSmallType
+		from WK_TYPE t
+		where t.type_level='3'
+	</select>
+
+	<!--查询工作笔记-->
+	<select id="findNote" resultMap="restBean">
+		select
+			  wt.type_name workBigType,
+			  wt1.type_name workSmallType,
+			  wn.work_desc workContent,
+			  wn.work_hours workHours,
+			  wn.output_name outputName,
+			  wn.work_hours workHours,
+			  wn.work_date workTime,
+			  wm.work_item workItem,
+			  wn.creater_name createrName
+		from WK_NOTE wn
+		left join wk_type wt on wn.work_category_id = wt.type_id
+		left join wk_type wt1 on wn.work_type_id = wt1.type_id
+		left join wk_model wm on wn.work_model_id = wm.model_id
+		where
+			wn.demand_id =#{demandId}
+			and wn.work_category_id =#{bigTypeId}
+			and wn.work_type_id =#{smallTypeId}
+			and substr(wn.work_date ,0,6)=#{workDate}
+			and wn.work_model_id = #{modelId}
+	</select>
+
+	<!--查询当月工作日天数-->
+	<select id="getDay" resultType="map">
+		select
+		*
+		from WK_WORKDAY t
+		where
+		years = #{time}
+	</select>
+
+	<!--根据工作量id修改工作量-->
+	<update id="updateWorkloadById">
+		update WK_WORKLOAD w
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="difficultDegree != null and difficultDegree != ''">
+				w.difficult_degree = #{difficultDegree},
+			</if>
+			<if test="workNum != null and workNum != ''">
+				w.work_num = #{workNum},
+			</if>
+			<if test="workTime != null and workTime != ''">
+				w.work_time=#{workTime},
+			</if>
+			<if test="manMonth != null and manMonth != ''">
+				w.man_month=#{manMonth},
+			</if>
+			<if test="workContent != null">
+				w.work_content=#{workContent},
+			</if>
+			<if test="workText != null">
+				w.work_text=#{workText},
+			</if>
+			<if test="outputName != null and outputName != ''">
+				w.output_name=#{outputName},
+			</if>
+			<if test="outputUrl != null and outputUrl != ''">
+				w.output_url=#{outputUrl},
+			</if>
+			<if test="hasOutput != null and hasOutput != ''">
+				w.has_output = #{hasOutput}
+			</if>
+		</trim>
+		where w.workload_id=#{workloadId}
+	</update>
+
+	<!--根据角色查询大类下的现有的小类-->
+	<select id="findSmallType" resultMap="restBean" >
+		SELECT
+		wt.type_id smallTypeId,
+        wt.type_name workSmallType
+		FROM WK_TYPE wt
+		WHERE  INSTR(wt.SEC_LEVEL, #{bigTypeId}) > 0
+		<if test="roleId != '主管'.toString()">
+			AND INSTR(wt.role_id, #{roleId}) > 0
+		</if>
+		AND (
+			SELECT
+			COUNT(1)
+			FROM WK_NOTE N
+			WHERE N.DEMAND_ID = #{demandId}
+			AND SUBSTR(N.WORK_DATE, 1, 6) = #{workDate}
+			AND N.WORK_TYPE_ID = wt.type_id
+		) > 0
+	</select>
+
+	<!--根据角色查询小类下的所有工作项-->
+	<select id="findWorkItem" resultMap="restBean">
+		SELECT
+		wm.model_id moduleId,
+		wm.work_item workItem
+		FROM wk_model wm
+		WHERE INSTR(wm.work_type , #{smallTypeId})>0
+		<if test="roleId != '主管'.toString()">
+			AND INSTR(wm.role_id, #{roleId}) > 0
+		</if>
+		AND (
+			SELECT COUNT(1)FROM WK_NOTE N
+			WHERE N.DEMAND_ID = #{demandId}
+			AND SUBSTR(N.WORK_DATE, 1, 6) =  #{workDate}
+			AND N.Work_Model_Id = wm.model_id
+		) > 0
+	</select>
+
+	<!--修改文件名称-->
+	<update id="updateFileName">
+		update WK_WORKLOAD w
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="fileName != null">
+				w.output_name= #{fileName},
+			</if>
+			<if test="hasOutput != null and hasOutput != ''">
+				w.has_output = #{hasOutput},
+			</if>
+		</trim>
+		where w.workload_id =#{workloadId}
+	</update>
+
+	<!--查询文件名称-->
+	<select id="getFileName" parameterType="string" resultType="map">
+		select
+		w.output_name fileName,
+		SUBSTR(w.work_date, 1, 6) workDate
+		from WK_WORKLOAD w
+		where w.workload_id = #{workloadId}
+	</select>
+
+	<!--导出清单sql-->
+	<select id="exlWorkload" resultMap="restBean" parameterType="com.ruoyi.project.module.workload.domain.WorkloadRequestBean">
+		select
+		wt.type_name demandName,
+		wd.demand_content demandContent,
+		wt2.type_name workBigType,
+		wt3.type_name workSmallType,
+		wm.work_item workItem,
+		wm.role_id roleId,
+		wd.demand_id demandId,
+		w.workload_id workloadId,
+		wde.userId,
+		wde.relevant,
+		to_char(to_date(substr(w.work_date ,0,6),'yyyyMM'),'yyyy-MM') workDate,
+		wd.source_by sourceBy,
+		wd.cq_num cqCode,
+		wt.type_id demandTypeId,
+		wt2.type_id bigTypeId,
+		wt3.type_id smallTypeId,
+		w.work_content workContent,
+		w.output_name outputName,
+		w.work_model_id moduleId,
+		wm.model_code modelCode,
+		wm.WORK_TIME normalHours,
+		w.difficult_degree difficultDegree,
+		wm.difficult_floor difficultFloor,
+		wm.difficult_ceiling difficultCeiling,
+		w.work_num workNum,
+		w.work_time workTime,
+		wm.work_time_type workTimeType,
+		wm.work_time_unit unit,
+		w.man_month manMonth,
+		w.WORK_TEXT workText,
+		wt2.sort,
+		wt.sort,
+		wt3.sort
+		from WK_WORKLOAD w
+		left join ( select wd.demand_id, wd.relevant, listagg(wd.user_id,',')  within group (order by wd.user_id) USERID from WK_DEMAND_EMPLOYEE wd  group by demand_id,wd.relevant) wde  on wde.demand_id = w.demand_id
+		left join WK_DEMAND wd on w.demand_id = wd.demand_id
+		left join WK_TYPE wt on wd.demand_type_id = wt.type_id
+		left join WK_TYPE wt2 on w.WORK_CATEGORY_ID = wt2.type_id
+		left join WK_TYPE wt3 on w.WORK_TYPE_ID = wt3.type_id
+		left join WK_MODEL wm on w.work_model_id = wm.model_id
+		where
+		1=1
+		<if test="isAll != 'isAll'.toString()">
+			and (instr(wde.RELEVANT,#{userId})>0 OR instr(wde.userId,#{userId}) >0)
+			and INSTR(wm.role_id, #{roleId}) > 0
+		</if>
+		<if test="demandTypeId != null and demandTypeId != ''">
+			and wt.type_id = #{demandTypeId}
+		</if>
+		<if test="hasOutput != null and hasOutput != ''">
+			and w.has_output = #{hasOutput}
+		</if>
+		<if test="sourceBy != null and sourceBy != ''">
+			and wd.SOURCE_BY = #{sourceBy}
+		</if>
+		<if test="cqCode != null and cqCode != ''">
+			and wd.cq_num like '%' || #{cqCode} ||'%'
+		</if>
+		<if test="demandContent != null and demandContent != ''">
+			and wd.demand_content like '%' || #{demandContent} ||'%'
+		</if>
+		<if test="demandStatus != null and demandStatus != ''">
+			and wd.DEMAND_STATUS = #{demandStatus}
+		</if>
+		<if test="workDate != null and workDate != ''">
+			and substr(w.work_date ,0,6) = #{workDate}
+		</if>
+		<if test="onlineTime != null and onlineTime != ''">
+			and substr(wd.ONLINE_TIME ,0,6) = #{onlineTime}
+		</if>
+		<if test="bigTypeId != null and bigTypeId != ''">
+			and wt2.type_id = #{bigTypeId}
+		</if>
+		<if test="smallTypeId != null and smallTypeId != ''">
+			and wt3.type_id = #{smallTypeId}
+		</if>
+		group by
+		wt.type_name,
+		wd.demand_content ,
+		wt2.type_name,
+		wm.role_id ,
+		wd.demand_id ,
+		w.workload_id ,
+		wde.userId,
+		wde.relevant,
+		to_char(to_date(substr(w.work_date ,0,6),'yyyyMM'),'yyyy-MM') ,
+		wd.source_by ,
+		wd.cq_num ,
+		wt.type_id ,
+		wt2.type_id ,
+		wt3.type_id ,
+		wt3.type_name ,
+		w.work_content ,
+		w.output_name ,
+		w.work_model_id ,
+		wm.model_code ,
+		wm.work_item ,
+		wm.WORK_TIME ,
+		w.difficult_degree ,
+		wm.difficult_floor ,
+		wm.difficult_ceiling ,
+		w.work_num ,
+		w.work_time ,
+		wm.work_time_type ,
+		wm.work_time_unit ,
+		w.man_month ,
+		w.WORK_TEXT ,
+		wt2.sort,
+		wt.sort,
+		wt3.sort
+		order by  to_number(wt.sort), wd.demand_content,to_number(wt2.sort),to_number(wt3.sort)
+	</select>
+</mapper>

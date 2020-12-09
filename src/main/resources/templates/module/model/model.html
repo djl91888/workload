@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('工作量模型列表')" />
+</head>
+<body class="gray-bg">
+     <div class="container-div">
+        <div class="row">
+            <div class="col-sm-12 search-collapse">
+                <form id="formId">
+                    <div class="select-list">
+                        <ul>
+                            <li>
+                                <label>0运营，1支撑：</label>
+                                <select name="modelType">
+                                    <option value="">所有</option>
+                                    <option value="-1">代码生成请选择字典属性</option>
+                                </select>
+                            </li>
+                            <li>
+                                <label>编号：</label>
+                                <input type="text" name="modelCode"/>
+                            </li>
+                            <li>
+                                <label>对应的工作小类，关联类别表：</label>
+                                <select name="workType">
+                                    <option value="">所有</option>
+                                    <option value="-1">代码生成请选择字典属性</option>
+                                </select>
+                            </li>
+                            <li>
+                                <label>角色id：</label>
+                                <input type="text" name="roleId"/>
+                            </li>
+                            <li>
+                                <label>工作项：</label>
+                                <input type="text" name="workItem"/>
+                            </li>
+                            <li>
+                                <label>0小时，1项/人：</label>
+                                <select name="workTimeType">
+                                    <option value="">所有</option>
+                                    <option value="-1">代码生成请选择字典属性</option>
+                                </select>
+                            </li>
+                            <li>
+                                <label>参考工时：</label>
+                                <input type="text" name="workTime"/>
+                            </li>
+                            <li>
+                                <label>参考工时单位：</label>
+                                <input type="text" name="workTimeUnit"/>
+                            </li>
+                            <li>
+                                <label>难度下限：</label>
+                                <input type="text" name="difficultFloor"/>
+                            </li>
+                            <li>
+                                <label>难度上限：</label>
+                                <input type="text" name="difficultCeiling"/>
+                            </li>
+                            <li>
+                                <label>创建人id：</label>
+                                <input type="text" name="createrId"/>
+                            </li>
+                            <li>
+                                <label>创建人姓名：</label>
+                                <input type="text" name="createrName"/>
+                            </li>
+                            <li>
+                                <label>备用1：</label>
+                                <input type="text" name="param1"/>
+                            </li>
+                            <li>
+                                <label>备用2：</label>
+                                <input type="text" name="param2"/>
+                            </li>
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+
+            <div class="btn-group-sm" id="toolbar" role="group">
+                <a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="module:model:export">
+                    <i class="fa fa-download"></i> 导出
+                </a>
+            </div>
+            <div class="col-sm-12 select-table table-striped">
+                <table id="bootstrap-table"></table>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('module:model:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('module:model:remove')}]];
+        var prefix = ctx + "module/model";
+
+        $(function() {
+            var options = {
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                exportUrl: prefix + "/export",
+                modalName: "工作量模型",
+                columns: [{
+                    checkbox: true
+                },
+                {
+                    field: 'modelId',
+                    title: '模型id',
+                    visible: false
+                },
+                {
+                    field: 'modelType',
+                    title: '0运营，1支撑'
+                },
+                {
+                    field: 'modelCode',
+                    title: '编号'
+                },
+                {
+                    field: 'workType',
+                    title: '对应的工作小类，关联类别表'
+                },
+                {
+                    field: 'roleId',
+                    title: '角色id'
+                },
+                {
+                    field: 'workItem',
+                    title: '工作项'
+                },
+                {
+                    field: 'workContent',
+                    title: '工作项描述'
+                },
+                {
+                    field: 'workTimeType',
+                    title: '0小时，1项/人'
+                },
+                {
+                    field: 'workTime',
+                    title: '参考工时'
+                },
+                {
+                    field: 'workTimeUnit',
+                    title: '参考工时单位'
+                },
+                {
+                    field: 'difficultFloor',
+                    title: '难度下限'
+                },
+                {
+                    field: 'difficultCeiling',
+                    title: '难度上限'
+                },
+                {
+                    field: 'createrId',
+                    title: '创建人id'
+                },
+                {
+                    field: 'createrName',
+                    title: '创建人姓名'
+                },
+                {
+                    field: 'param1',
+                    title: '备用1'
+                },
+                {
+                    field: 'param2',
+                    title: '备用2'
+                }]
+            };
+            $.table.init(options);
+        });
+    </script>
+</body>
+</html>
